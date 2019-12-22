@@ -44,13 +44,18 @@
 //  _| \_,_| _|_|_| \___| \___|   ___/ _| \___| \_,_| \___|  
 //--------------------------------------------------------------------    
 // 2019/10/17 - FB V1.0.1
-// 2019:12/15 - FB V1.0.2 - optimisation/simplifications et reduction conso mémoire
+// 2019/12/15 - FB V1.0.2 - optimisation/simplifications et reduction conso mémoire
+// 2019/12/17 - FB V1.0.3 - modif led indication envoi MySensors
+// 2019/12/22 - FB V1.0.4 - remove warning message
 //--------------------------------------------------------------------
 // Enable debug prints
 //#define MY_DEBUG
 
-#define VERSION   "v1.0.2"
+#define VERSION   "v1.0.3"
 
+// Set LOW transmit power level as default, if you have an amplified NRF-module and
+// power your radio separately with a good regulator you can turn up PA level.
+#define MY_RF24_PA_LEVEL RF24_PA_LOW
 
 #define MY_BAUD_RATE 1200
 
@@ -93,7 +98,7 @@ struct teleinfo_s {
 teleinfo_s teleinfo;
 
 
-#define LED_ERROR		     5  // Error led pin
+#define LED_SEND         5  
 #define LED_TELEINFO     4 
 
 
@@ -134,11 +139,11 @@ MyMessage msgKWH( 0, V_KWH );
 //--------------------------------------------------------------------
 void setup()
 {
-	
-  pinMode(LED_ERROR, OUTPUT);
+  
+  pinMode(LED_SEND, OUTPUT);
   pinMode(LED_TELEINFO, OUTPUT);
 
-  digitalWrite(LED_ERROR , HIGH);
+  digitalWrite(LED_SEND , HIGH);
   digitalWrite(LED_TELEINFO , HIGH);
   
   Serial.begin(1200);
@@ -149,9 +154,9 @@ void setup()
   Serial.print(F("                                             "));
   Serial.println(VERSION);
 
-  digitalWrite(LED_ERROR, LOW);
+  digitalWrite(LED_SEND, LOW);
   delay(200);
-  digitalWrite(LED_ERROR , HIGH);
+  digitalWrite(LED_SEND , HIGH);
   delay(200);
   digitalWrite(LED_TELEINFO, LOW);
   delay(200);
@@ -161,11 +166,11 @@ void setup()
 //--------------------------------------------------------------------
 void presentation()
 {
-	// Send the sketch version information to the gateway and Controller
-	sendSketchInfo("Teleinfo", VERSION);
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo("Teleinfo", VERSION);
 
-	// Register this device as power sensor
-	present( CHILD_ID_ADCO, S_POWER );
+  // Register this device as power sensor
+  present( CHILD_ID_ADCO, S_POWER );
   present( CHILD_ID_OPTARIF, S_POWER );
   present( CHILD_ID_ISOUSC, S_POWER );
   present( CHILD_ID_BASE, S_POWER );
@@ -261,16 +266,17 @@ boolean flag_hhphc = false;
 //--------------------------------------------------------------------
 void loop()
 {
-	uint32_t currentTime = millis();
+  uint32_t currentTime = millis();
 
   // lecture teleinfo -------------------------
   read_teleinfo();
  
-	// Only send values at a maximum frequency 
+  // Only send values at a maximum frequency 
   if (currentTime - lastSend > SEND_FREQUENCY) {
-		send_teleinfo();
-		lastSend = currentTime;
-	} 
+    send_teleinfo();
+    change_etat_led_send();
+    lastSend = currentTime;
+  } 
   
 
 }

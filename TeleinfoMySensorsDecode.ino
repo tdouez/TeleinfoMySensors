@@ -34,17 +34,17 @@
 //  mot d'etat (autocontrole) : MOTDETAT (6 car.) 
 //-----------------------------------------------------------------------------------------------------------------
 //  Information en provenance de la telinfo  
-//    ADCO 040422040644 5	    (N° d'identification du compteur : ADCO (12 caractères))
-//    OPTARIF HC.. <	        (Option tarifaire (type d'abonnement) : OPTARIF (4 car.))
-//    ISOUSC 45 ?	            (Intensité souscrite : ISOUSC ( 2 car. unité = ampères))
-//    HCHC 077089461 0	        (Index heures creuses si option = heures creuses : HCHC ( 9 car. unité = Wh))
-//    HCHP 096066754 >	        (Index heures pleines si option = heures creuses : HCHP ( 9 car. unité = Wh))
-//    PTEC HP..  	            (Période tarifaire en cours : PTEC ( 4 car.))
-//    IINST 002 Y	            (Intensité instantanée : IINST ( 3 car. unité = ampères))
-//    IMAX 044 G	            (Intensité maximale : IMAX ( 3 car. unité = ampères))
-//    PAPP 00460 +	        	(Puissance apparente : PAPP ( 5 car. unité = Volt.ampères))
-//    HHPHC E 0	                (Groupe horaire si option = heures creuses ou tempo : HHPHC (1 car.))
-//    MOTDETAT 000000 B	        (Mot d'état (autocontrôle) : MOTDETAT (6 car.))
+//    ADCO 040422040644 5      (N° d'identification du compteur : ADCO (12 caractères))
+//    OPTARIF HC.. <          (Option tarifaire (type d'abonnement) : OPTARIF (4 car.))
+//    ISOUSC 45 ?             (Intensité souscrite : ISOUSC ( 2 car. unité = ampères))
+//    HCHC 077089461 0          (Index heures creuses si option = heures creuses : HCHC ( 9 car. unité = Wh))
+//    HCHP 096066754 >          (Index heures pleines si option = heures creuses : HCHP ( 9 car. unité = Wh))
+//    PTEC HP..               (Période tarifaire en cours : PTEC ( 4 car.))
+//    IINST 002 Y             (Intensité instantanée : IINST ( 3 car. unité = ampères))
+//    IMAX 044 G              (Intensité maximale : IMAX ( 3 car. unité = ampères))
+//    PAPP 00460 +            (Puissance apparente : PAPP ( 5 car. unité = Volt.ampères))
+//    HHPHC E 0                 (Groupe horaire si option = heures creuses ou tempo : HHPHC (1 car.))
+//    MOTDETAT 000000 B         (Mot d'état (autocontrôle) : MOTDETAT (6 car.))
 //-----------------------------------------------------------------------------------------------------------------
 
 char buffin[32];
@@ -60,15 +60,20 @@ static int led_state;
   
 }
 
+void change_etat_led_send()
+{
+static int led_state;
+  
+  led_state = !led_state;
+  digitalWrite(LED_SEND, led_state);
+  
+}
 
 // Traitement trame teleinfo ------------------------------------------
-void traitement_trame(char *buff, int len)
+void traitement_trame(char *buff)
 {
-  int i;
 
-    //Serial.print("->");
-    //Serial.println(buff+i);
-     
+    
     if (strncmp("ADCO ", &buff[1] , 5)==0) {
       strncpy(teleinfo.ADCO, &buff[6], 12);
       teleinfo.ADCO[12] = '\0';
@@ -76,7 +81,7 @@ void traitement_trame(char *buff, int len)
     }
     if (strncmp("OPTARIF ", &buff[1] , 8)==0) {
       strncpy(teleinfo.OPTARIF, &buff[9], 4);
-	    teleinfo.OPTARIF[4] = '\0';
+      teleinfo.OPTARIF[4] = '\0';
       return;
     }
     if (strncmp("ISOUSC ", &buff[1] , 7)==0) {
@@ -129,7 +134,7 @@ void traitement_trame(char *buff, int len)
     }
     if (strncmp("PEJP ", &buff[1] , 5)==0) {
       strncpy(teleinfo.PEJP, &buff[6], 2);
-	    teleinfo.PEJP[2] = '\0';
+      teleinfo.PEJP[2] = '\0';
       return;
     }
     if (strncmp("PTEC ", &buff[1] , 5)==0) {
@@ -160,7 +165,7 @@ void traitement_trame(char *buff, int len)
     }
     if (strncmp("HHPHC ", &buff[1] , 6)==0) {
       strncpy(teleinfo.HHPHC, &buff[7], 1);
-	    teleinfo.HHPHC[1] = '\0';
+      teleinfo.HHPHC[1] = '\0';
       return;
     }
 }
@@ -196,15 +201,15 @@ char in;
       change_etat_led_teleinfo();
       //Serial.println(buffin);
       if (ckecksum(buffin,bufflen-1) == buffin[bufflen-2]) { // Test du checksum
-        traitement_trame(buffin,bufflen-1);
+        traitement_trame(buffin);
       } 
-      else {
-    		digitalWrite(LED_ERROR, LOW);
-    		delay(100);
-    		digitalWrite(LED_ERROR, HIGH);
-      //  Serial.print("CS KO! ");
-      //  Serial.println(buffin);
-      }
+//      else {
+//        digitalWrite(LED_SEND, LOW);
+//        delay(100);
+//        digitalWrite(LED_SEND, HIGH);
+//      //  Serial.print("CS KO! ");
+//      //  Serial.println(buffin);
+//      }
     }
   }
 }

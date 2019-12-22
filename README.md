@@ -59,7 +59,7 @@ Ces differents messages donnent les indications suivantes en fonction de l'abonn
     groupe horaire si option = heures creuses ou tempo : HHPHC (1 car.)
     mot d'etat (autocontrole) : MOTDETAT (6 car.)
 
-Exemple d'information en provenance de la teleinfo
+Exemple de trames teleinfo
 
     ADCO 040422040644 5 (N° d'identification du compteur : ADCO (12 caractères))
     OPTARIF HC.. < (Option tarifaire (type d'abonnement) : OPTARIF (4 car.))

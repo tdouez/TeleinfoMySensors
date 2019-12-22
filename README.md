@@ -1,10 +1,10 @@
 # TeleinfoMySensors v1.0.4
 Interface Téléinfo pour compteur Linky avec MySensors
 
-Projet utilsant un Arduino Pro mini et un module NRF24L01
+Projet utilisant un Arduino Pro mini et un module NRF24L01
 
 - Hardware disponible sous https://www.openhardware.io/view/744/MySensors-Linky
-- Boîtier disponibles sous https://www.thingiverse.com/thing:3985437
+- Boîtier disponible sous https://www.thingiverse.com/thing:3985437
 
 Liste des informations remontées via MySensors :
 

@@ -147,16 +147,7 @@ MyMessage msgKWH( 0, V_KWH );
 
 //--------------------------------------------------------------------
 void setup()
-{
-  
-  /*
-  pinMode(LED_SEND, OUTPUT);
-  pinMode(LED_TELEINFO, OUTPUT);
-
-  digitalWrite(LED_SEND , HIGH);
-  digitalWrite(LED_TELEINFO , HIGH);
-  */
-  
+{ 
   Serial.begin(1200);
  
   Serial.println(F("   __|              _/           _ )  |"));
@@ -164,15 +155,6 @@ void setup()
   Serial.println(F("  _| \\_,_| _|_|_| \\___| \\___|   ___/ _| \\___| \\_,_| \\___|"));
   Serial.print(F("                                             "));
   Serial.println(VERSION);
-/*
-  digitalWrite(LED_SEND, LOW);
-  delay(200);
-  digitalWrite(LED_SEND , HIGH);
-  delay(200);
-  digitalWrite(LED_TELEINFO, LOW);
-  delay(200);
-  digitalWrite(LED_TELEINFO , HIGH);
-  */
 }
 
 //--------------------------------------------------------------------

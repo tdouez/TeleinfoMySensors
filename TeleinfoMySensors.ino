@@ -47,15 +47,20 @@
 // 2019/12/15 - FB V1.0.2 - optimisation/simplifications et reduction conso mémoire
 // 2019/12/17 - FB V1.0.3 - modif led indication envoi MySensors
 // 2019/12/22 - FB V1.0.4 - remove warning message
+// 2020/01/15 - FB V1.0.5 - update lad function
 //--------------------------------------------------------------------
 // Enable debug prints
 //#define MY_DEBUG
 
-#define VERSION   "v1.0.4"
+#define VERSION   "v1.0.5"
+
+// A postionner si vous avez une gateway MQTT
+//#define MY_NODE_ID 2
 
 // Set LOW transmit power level as default, if you have an amplified NRF-module and
 // power your radio separately with a good regulator you can turn up PA level.
-#define MY_RF24_PA_LEVEL RF24_PA_LOW
+//#define MY_RF24_PA_LEVEL RF24_PA_LOW
+//#define MY_RF24_PA_LEVEL RF24_PA_HIGH -> Attention à le consommation vis à vis du Linky - non testé
 
 #define MY_BAUD_RATE 1200
 
@@ -64,6 +69,10 @@
 //#define MY_RADIO_NRF5_ESB
 //#define MY_RADIO_RFM69
 //#define MY_RADIO_RFM95
+
+#define MY_DEFAULT_ERR_LED_PIN 4  // Error led pin
+#define MY_DEFAULT_RX_LED_PIN  13 // Receive led pin, on board LED
+#define MY_DEFAULT_TX_LED_PIN  3  // Trans led pin
 
 #include <MySensors.h>
 
@@ -98,8 +107,8 @@ struct teleinfo_s {
 teleinfo_s teleinfo;
 
 
-#define LED_SEND         5  
-#define LED_TELEINFO     4 
+//#define LED_SEND         4  
+//#define LED_TELEINFO     3 
 
 
 #define CHILD_ID_ADCO     0
@@ -140,11 +149,13 @@ MyMessage msgKWH( 0, V_KWH );
 void setup()
 {
   
+  /*
   pinMode(LED_SEND, OUTPUT);
   pinMode(LED_TELEINFO, OUTPUT);
 
   digitalWrite(LED_SEND , HIGH);
   digitalWrite(LED_TELEINFO , HIGH);
+  */
   
   Serial.begin(1200);
  
@@ -153,7 +164,7 @@ void setup()
   Serial.println(F("  _| \\_,_| _|_|_| \\___| \\___|   ___/ _| \\___| \\_,_| \\___|"));
   Serial.print(F("                                             "));
   Serial.println(VERSION);
-
+/*
   digitalWrite(LED_SEND, LOW);
   delay(200);
   digitalWrite(LED_SEND , HIGH);
@@ -161,6 +172,7 @@ void setup()
   digitalWrite(LED_TELEINFO, LOW);
   delay(200);
   digitalWrite(LED_TELEINFO , HIGH);
+  */
 }
 
 //--------------------------------------------------------------------
@@ -274,7 +286,6 @@ void loop()
   // Only send values at a maximum frequency 
   if (currentTime - lastSend > SEND_FREQUENCY) {
     send_teleinfo();
-    change_etat_led_send();
     lastSend = currentTime;
   } 
   

@@ -50,6 +50,25 @@
 char buffin[32];
 int  bufflen = 0;
 
+/*
+void change_etat_led_teleinfo()
+{
+static int led_state;
+  
+  led_state = !led_state;
+  digitalWrite(LED_TELEINFO, led_state);
+  
+}
+
+void change_etat_led_send()
+{
+static int led_state;
+  
+  led_state = !led_state;
+  digitalWrite(LED_SEND, led_state);
+  
+}
+*/
 
 // Traitement trame teleinfo ------------------------------------------
 void traitement_trame(char *buff)
@@ -177,9 +196,10 @@ char in;
     buffin[bufflen] = in;
     bufflen++;
     
-    if (bufflen > 20) bufflen=0;
+    if (bufflen > 21) bufflen=0;
 
     if (in == 0x0D && bufflen > 5)   { // fin trame ------
+      //change_etat_led_teleinfo();
       //Serial.println(buffin);
       if (ckecksum(buffin,bufflen-1) == buffin[bufflen-2]) { // Test du checksum
         traitement_trame(buffin);

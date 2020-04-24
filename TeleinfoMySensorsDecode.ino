@@ -196,6 +196,8 @@ char in;
     buffin[bufflen] = in;
     bufflen++;
 
+    if (bufflen > 21) bufflen=0;
+    
     if (in == 0x0D && bufflen > 5)   { // fin trame ------
       //change_etat_led_teleinfo();
       //Serial.println(buffin);

@@ -1,5 +1,5 @@
 # TeleinfoMySensors v1.0.6
-Interface Téléinfo pour compteur Linky avec MySensors
+Interface Téléinfo pour compteur Linky avec MySensors - mode historique
 
 Projet utilisant un Arduino Pro mini et un module NRF24L01
 

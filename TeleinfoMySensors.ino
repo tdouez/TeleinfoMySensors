@@ -49,19 +49,21 @@
 // 2019/12/22 - FB V1.0.4 - remove warning message
 // 2019/12/22 - FB V1.0.5 - optimisation
 // 2020/04/25 - FB V1.0.6 - ADCO bug fix
+// 2020/04/25 - FB V1.1.0 - Compatible mode standard
 //--------------------------------------------------------------------
 // Enable debug prints
 //#define MY_DEBUG
 
+
 //#define MY_NODE_ID 2
 
-#define VERSION   "v1.0.6"
+#define VERSION   "v1.1.0"
 
 // Set LOW transmit power level as default, if you have an amplified NRF-module and
 // power your radio separately with a good regulator you can turn up PA level.
 //#define MY_RF24_PA_LEVEL RF24_PA_LOW
 
-#define MY_BAUD_RATE 1200
+#define MY_BAUD_RATE 9600    // mode standard
 
 // Enable and select radio type attached
 #define MY_RADIO_RF24
@@ -134,11 +136,11 @@ teleinfo_s teleinfo;
 #define CHILD_ID_HHPHC     21
 
 
-MyMessage msgVAR1_ADCO( 0, V_VAR1 );
-MyMessage msgVAR2_OPTARIF( 0, V_VAR2 );
-MyMessage msgVAR3_PTEC( 0, V_VAR3 );
-MyMessage msgVAR4_HHPHC( 0, V_VAR4 );
-MyMessage msgVAR5_DEMAIN( 0, V_VAR5 );
+MyMessage msgVAR1_ADCO( 0, V_TEXT);
+MyMessage msgVAR2_OPTARIF( 0, V_TEXT );
+MyMessage msgVAR3_PTEC( 0, V_TEXT );
+MyMessage msgVAR4_HHPHC( 0, V_TEXT );
+MyMessage msgVAR5_DEMAIN( 0, V_TEXT );
 MyMessage msgCURRENT( 0, V_CURRENT );
 MyMessage msgWATT( 0, V_WATT );
 MyMessage msgKWH( 0, V_KWH );
@@ -148,30 +150,13 @@ MyMessage msgKWH( 0, V_KWH );
 void setup()
 {
   
-  /*
-  pinMode(LED_SEND, OUTPUT);
-  pinMode(LED_TELEINFO, OUTPUT);
-
-  digitalWrite(LED_SEND , HIGH);
-  digitalWrite(LED_TELEINFO , HIGH);
-  */
-  
-  Serial.begin(1200);
+  Serial.begin(MY_BAUD_RATE);
  
   Serial.println(F("   __|              _/           _ )  |"));
   Serial.println(F("   _| |  |   ` \\    -_)   -_)    _ \\  |   -_)  |  |   -_)"));
   Serial.println(F("  _| \\_,_| _|_|_| \\___| \\___|   ___/ _| \\___| \\_,_| \\___|"));
   Serial.print(F("                                             "));
   Serial.println(VERSION);
-/*
-  digitalWrite(LED_SEND, LOW);
-  delay(200);
-  digitalWrite(LED_SEND , HIGH);
-  delay(200);
-  digitalWrite(LED_TELEINFO, LOW);
-  delay(200);
-  digitalWrite(LED_TELEINFO , HIGH);
-  */
 }
 
 //--------------------------------------------------------------------
@@ -181,8 +166,8 @@ void presentation()
   sendSketchInfo("Teleinfo", VERSION);
 
   // Register this device as power sensor
-  present( CHILD_ID_ADCO, S_POWER );
-  present( CHILD_ID_OPTARIF, S_POWER );
+  present( CHILD_ID_ADCO, S_INFO );
+  present( CHILD_ID_OPTARIF, S_INFO );
   present( CHILD_ID_ISOUSC, S_POWER );
   present( CHILD_ID_BASE, S_POWER );
   present( CHILD_ID_HCHC, S_POWER );
@@ -196,13 +181,13 @@ void presentation()
   present( CHILD_ID_BBR_HC_JR, S_POWER );
   present( CHILD_ID_BBR_HP_JR, S_POWER );
   present( CHILD_ID_PEJP, S_POWER );
-  present( CHILD_ID_PTEC, S_POWER );
-  present( CHILD_ID_DEMAIN, S_POWER );
+  present( CHILD_ID_PTEC, S_INFO );
+  present( CHILD_ID_DEMAIN, S_INFO );
   present( CHILD_ID_IINST, S_POWER );
   present( CHILD_ID_ADPS, S_POWER );
   present( CHILD_ID_IMAX, S_POWER );
   present( CHILD_ID_PAPP, S_POWER );
-  present( CHILD_ID_HHPHC, S_POWER );
+  present( CHILD_ID_HHPHC, S_INFO );
 
 }
 

@@ -49,7 +49,7 @@
 // 2019/12/22 - FB V1.0.4 - remove warning message
 // 2019/12/22 - FB V1.0.5 - optimisation
 // 2020/04/25 - FB V1.0.6 - ADCO bug fix
-// 2020/04/25 - FB V1.1.0 - Compatible mode standard
+// 2020/04/25 - FB V1.1.0 - Mode standard
 //--------------------------------------------------------------------
 // Enable debug prints
 //#define MY_DEBUG
@@ -82,8 +82,11 @@ uint32_t lastSend = 0;
 
 // Variables Téléinfo---------------------
 struct teleinfo_s {
-  char ADCO[13]="";
-  char OPTARIF[5]="";
+  char ADSC[13]="";
+  char VTIC[3]="";
+  char NGTF[17]="";
+  char LTARF[16]="";
+  char EAST[10]="";
   unsigned int ISOUSC=0; 
   unsigned long BASE=0;
   unsigned long HCHC=0;

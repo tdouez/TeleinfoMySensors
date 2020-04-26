@@ -56,131 +56,116 @@
 //  Profil du prochain jour de point : PPOINTE (98 carateres)
 //-----------------------------------------------------------------------------------------------------------------
 
-#define LG_TRAME_MAX  25
-#define LG_TRAME_MIN  10
+
+#define LG_TRAME_MAX  125
+#define LG_TRAME_MIN  5
 #define DEB_TRAME 0x0A
 #define FIN_TRAME 0x0D
 
 char buffin[LG_TRAME_MAX];
 int  index_buff = 0;
 
-/*
-void change_etat_led_teleinfo()
-{
-static int led_state;
-  
-  led_state = !led_state;
-  digitalWrite(LED_TELEINFO, led_state);
-  
-}
-
-void change_etat_led_send()
-{
-static int led_state;
-  
-  led_state = !led_state;
-  digitalWrite(LED_SEND, led_state);
-  
-}
-*/
-
 // Traitement trame teleinfo ------------------------------------------
 void traitement_trame(char *buff)
 {
 
+    Serial.println(buff);
     
-    if (strncmp("ADCO ", &buff[1] , 5)==0) {
-      strncpy(teleinfo.ADCO, &buff[6], 12);
-      teleinfo.ADCO[12] = '\0';
+    if (strncmp("ADSC", &buff[0] , 4)==0) {
+      strncpy(teleinfo._ADSC, &buff[5], 12);
+      teleinfo._ADSC[12] = '\0';
       return;
     }
-    if (strncmp("OPTARIF ", &buff[1] , 8)==0) {
-      strncpy(teleinfo.OPTARIF, &buff[9], 4);
-      teleinfo.OPTARIF[4] = '\0';
+    if (strncmp("VTIC", &buff[0] , 4)==0) {
+      strncpy(teleinfo.VTIC, &buff[5], 2);
+      teleinfo.VTIC[2] = '\0';
       return;
     }
-    if (strncmp("ISOUSC ", &buff[1] , 7)==0) {
-      teleinfo.ISOUSC = atoi(&buff[8]);
+    if (strncmp("NGTF", &buff[0] , 4)==0) {
+      strncpy(teleinfo.NGTF, &buff[5], 16);
+      teleinfo.NGTF[16] = '\0';
       return;
     }
-    if (strncmp("BASE ", &buff[1] , 5)==0) {
-      teleinfo.BASE = atol(&buff[6]);
+    if (strncmp("LTARF", &buff[0] , 4)==0) {
+      strncpy(teleinfo.LTARF, &buff[5], 16);
+      teleinfo.LTARF[16] = '\0';
       return;
     }
-    if (strncmp("HCHC ", &buff[1] , 5)==0) {
-      teleinfo.HCHC = atol(&buff[6]);
+    if (strncmp("EAST", &buff[0] , 4)==0) {
+      teleinfo.EAST = atol(&buff[5]);
       return;
     }
-    if (strncmp("HCHP ", &buff[1] , 5)==0) {
-      teleinfo.HCHP = atol(&buff[6]);
+    if (strncmp("IRMS1", &buff[0] , 5)==0) {
+      teleinfo.IRMS1 = atoi(&buff[6]);
       return;
     }
-    if (strncmp("EJP HN ", &buff[1] , 7)==0) {
-      teleinfo.EJP_HN = atol(&buff[8]);
+    if (strncmp("IRMS2", &buff[0] , 5)==0) {
+      teleinfo.IRMS2 = atoi(&buff[6]);
       return;
     }
-    if (strncmp("EJP HPM ", &buff[1] , 8)==0) {
-      teleinfo.EJP_HPM = atol(&buff[9]);
+    if (strncmp("IRMS3", &buff[0] , 5)==0) {
+      teleinfo.IRMS3 = atoi(&buff[6]);
       return;
     }
-    if (strncmp("BBR HC JB ", &buff[1] , 10)==0) {
-      teleinfo.BBR_HC_JB = atol(&buff[11]);
+    if (strncmp("URMS1", &buff[0] , 5)==0) {
+      teleinfo.URMS1 = atoi(&buff[6]);
       return;
     }
-    if (strncmp("BBR HP JB ", &buff[1] , 10)==0) {
-      teleinfo.BBR_HP_JB = atol(&buff[11]);
+    if (strncmp("URMS2", &buff[0] , 5)==0) {
+      teleinfo.URMS2 = atoi(&buff[6]);
       return;
     }
-    if (strncmp("BBR HC JW ", &buff[1] , 10)==0) {
-      teleinfo.BBR_HC_JW = atol(&buff[11]);
+    if (strncmp("URMS3", &buff[0] , 5)==0) {
+      teleinfo.URMS3 = atoi(&buff[6]);
       return;
     }
-    if (strncmp("BBR HP JW ", &buff[1] , 10)==0) {
-      teleinfo.BBR_HP_JW = atol(&buff[11]);
+    if (strncmp("PREF", &buff[0] , 4)==0) {
+      teleinfo.PREF = atoi(&buff[5]);
       return;
     }
-    if (strncmp("BBR HC JR ", &buff[1] , 10)==0) {
-      teleinfo.BBR_HC_JR = atol(&buff[11]);
+    if (strncmp("PCOUP", &buff[0] , 5)==0) {
+      teleinfo.PCOUP = atoi(&buff[6]);
       return;
     }
-    if (strncmp("BBR HP JR ", &buff[1] , 10)==0) {
-      teleinfo.BBR_HP_JR = atol(&buff[11]);
+    if (strncmp("SINSTS", &buff[0] , 6)==0) {
+      teleinfo.SINSTS = atoi(&buff[7]);
       return;
     }
-    if (strncmp("PEJP ", &buff[1] , 5)==0) {
-      strncpy(teleinfo.PEJP, &buff[6], 2);
-      teleinfo.PEJP[2] = '\0';
+    if (strncmp("SINSTS1", &buff[0] , 7)==0) {
+      teleinfo.SINSTS1 = atoi(&buff[8]);
       return;
     }
-    if (strncmp("PTEC ", &buff[1] , 5)==0) {
-      strncpy(teleinfo.PTEC, &buff[6], 4);
-      teleinfo.PTEC[4] = '\0';
+    if (strncmp("SINSTS2", &buff[0] , 7)==0) {
+      teleinfo.SINSTS2 = atoi(&buff[8]);
       return;
     }
-    if (strncmp("DEMAIN ", &buff[1] , 5)==0) {
-      strncpy(teleinfo.DEMAIN, &buff[6], 4);
-      teleinfo.DEMAIN[4] = '\0';
+    if (strncmp("SINSTS3", &buff[0] , 7)==0) {
+      teleinfo.SINSTS3 = atoi(&buff[8]);
       return;
     }
-    if (strncmp("IINST ", &buff[1] , 6)==0) {
-      teleinfo.IINST = atoi(&buff[7]);
+    if (strncmp("STGE", &buff[0] , 4)==0) {
+      strncpy(teleinfo.STGE, &buff[5], 8);
+      teleinfo.STGE[8] = '\0';
       return;
     }
-    if (strncmp("PAPP ", &buff[1] , 5)==0) {
-      teleinfo.PAPP = atoi(&buff[6]);
+    if (strncmp("MSG1", &buff[0] , 4)==0) {
+      strncpy(teleinfo.MSG1, &buff[5], 32);
+      teleinfo.MSG1[32] = '\0';
       return;
     }
-    if (strncmp("ADPS ", &buff[1] , 5)==0) {
-      teleinfo.ADPS = atoi(&buff[6]);
+    if (strncmp("NTAF", &buff[0] , 4)==0) {
+      strncpy(teleinfo.NTAF, &buff[5], 2);
+      teleinfo.NTAF[2] = '\0';
       return;
     }
-    if (strncmp("IMAX ", &buff[1] , 5)==0) {
-      teleinfo.IMAX = atoi(&buff[6]);
+    if (strncmp("NJOURF", &buff[0] , 6)==0) {
+      strncpy(teleinfo.NJOURF, &buff[7], 2);
+      teleinfo.NJOURF[2] = '\0';
       return;
     }
-    if (strncmp("HHPHC ", &buff[1] , 6)==0) {
-      strncpy(teleinfo.HHPHC, &buff[7], 1);
-      teleinfo.HHPHC[1] = '\0';
+    if (strncmp("NJOURF1", &buff[0] , 7)==0) {
+      strncpy(teleinfo.NJOURF1, &buff[8], 2);
+      teleinfo.NJOURF1[2] = '\0';
       return;
     }
 }
@@ -191,9 +176,11 @@ char ckecksum(char *buff, int len)
 int i;
 char sum = 0;
 
-    for (i=1; i<(len-2); i++) sum = sum + buff[i];
+    for (i=0; i<len; i++) sum = sum + buff[i];
     sum = (sum & 0x3F) + 0x20;
 
+    //Serial.print("CalCS=");
+    //Serial.println(sum, HEX);
     return(sum);
 }
 
@@ -211,13 +198,18 @@ char in;
         break;
 
       case FIN_TRAME:
-        Serial.println(buffin);
-        Serial.print("Ind=");
-        Serial.println(index_buff);
+        buffin[index_buff]=0;
+        
         // Test validité longueur trame
         if (index_buff >= LG_TRAME_MIN-1 && index_buff <= LG_TRAME_MAX-1) {
-          Serial.print("CalCS=");
-          Serial.println(buffin[index_buff-1], HEX);
+          //Serial.println(buffin);
+          //for (int i=0; i<index_buff; i++) {
+          //  Serial.print(".");
+          //  Serial.print(buffin[i], HEX);
+          //}
+          //Serial.println("");
+          //Serial.print("CS=");
+          //Serial.println(buffin[index_buff-1], HEX);
           if (ckecksum(buffin, index_buff-1) == buffin[index_buff-1]) { // Test du checksum
             traitement_trame(buffin);
           } 

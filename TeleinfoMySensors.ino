@@ -82,31 +82,28 @@ uint32_t lastSend = 0;
 
 // Variables Téléinfo---------------------
 struct teleinfo_s {
-  char ADSC[13]="";
+  char _ADSC[13]="";
   char VTIC[3]="";
   char NGTF[17]="";
   char LTARF[16]="";
-  char EAST[10]="";
-  unsigned int ISOUSC=0; 
-  unsigned long BASE=0;
-  unsigned long HCHC=0;
-  unsigned long HCHP=0;
-  unsigned long EJP_HN=0;
-  unsigned long EJP_HPM=0;
-  unsigned long BBR_HC_JB=0;
-  unsigned long BBR_HP_JB=0;
-  unsigned long BBR_HC_JW=0;
-  unsigned long BBR_HP_JW=0;
-  unsigned long BBR_HC_JR=0;
-  unsigned long BBR_HP_JR=0;
-  char PEJP[3]="";
-  char PTEC[5]="";
-  char DEMAIN[5]="";
-  unsigned int IINST=0;
-  unsigned int PAPP=0;
-  unsigned int ADPS=0;
-  unsigned int IMAX=0;
-  char HHPHC[2]="";
+  unsigned long EAST=0;
+  unsigned int IRMS1=0;
+  unsigned int IRMS2=0;
+  unsigned int IRMS3=0;
+  unsigned int URMS1=0;
+  unsigned int URMS2=0;
+  unsigned int URMS3=0;
+  unsigned int PREF=0;
+  unsigned int PCOUP=0;
+  unsigned int SINSTS=0;
+  unsigned int SINSTS1=0;
+  unsigned int SINSTS2=0;
+  unsigned int SINSTS3=0;
+  char STGE[9]="";
+  char MSG1[32]="";
+  char NTAF[2]="";
+  char NJOURF[2]="";
+  char NJOURF1[2]="";
 };
 teleinfo_s teleinfo;
 
@@ -115,31 +112,31 @@ teleinfo_s teleinfo;
 //#define LED_TELEINFO     3 
 
 
-#define CHILD_ID_ADCO     0
-#define CHILD_ID_OPTARIF  1
-#define CHILD_ID_ISOUSC   2
-#define CHILD_ID_BASE     3
-#define CHILD_ID_HCHC     4
-#define CHILD_ID_HCHP     5
-#define CHILD_ID_EJP_HN   6
-#define CHILD_ID_EJP_HPM  7
-#define CHILD_ID_BBR_HC_JB 8
-#define CHILD_ID_BBR_HP_JB 9
-#define CHILD_ID_BBR_HC_JW 10
-#define CHILD_ID_BBR_HP_JW 11
-#define CHILD_ID_BBR_HC_JR 12
-#define CHILD_ID_BBR_HP_JR 13
-#define CHILD_ID_PEJP      14
-#define CHILD_ID_PTEC      15
-#define CHILD_ID_DEMAIN    16
-#define CHILD_ID_IINST     17
-#define CHILD_ID_PAPP      18
-#define CHILD_ID_ADPS      19
-#define CHILD_ID_IMAX      20
-#define CHILD_ID_HHPHC     21
+#define CHILD_ID_ADSC     0
+#define CHILD_ID_VTIC     1
+#define CHILD_ID_NGTF     2
+#define CHILD_ID_LTARF    3
+#define CHILD_ID_EAST     4
+#define CHILD_ID_IRMS1    5
+#define CHILD_ID_IRMS2    6
+#define CHILD_ID_IRMS3    7
+#define CHILD_ID_URMS1    8
+#define CHILD_ID_URMS2    9
+#define CHILD_ID_URMS3    10
+#define CHILD_ID_PREF     11
+#define CHILD_ID_PCOUP    12
+#define CHILD_ID_SINSTS   13
+#define CHILD_ID_SINSTS1  14
+#define CHILD_ID_SINSTS2  15
+#define CHILD_ID_SINSTS3  16
+#define CHILD_ID_STGE     17
+#define CHILD_ID_MSG1     18
+#define CHILD_ID_NTAF     19
+#define CHILD_ID_NJOURF   20
+#define CHILD_ID_NJOURF1  21
 
 
-MyMessage msgVAR1_ADCO( 0, V_TEXT);
+MyMessage msgVAR1_ADSC( 0, V_TEXT);
 MyMessage msgVAR2_OPTARIF( 0, V_TEXT );
 MyMessage msgVAR3_PTEC( 0, V_TEXT );
 MyMessage msgVAR4_HHPHC( 0, V_TEXT );
@@ -169,9 +166,31 @@ void presentation()
   sendSketchInfo("Teleinfo", VERSION);
 
   // Register this device as power sensor
-  present( CHILD_ID_ADCO, S_INFO );
-  present( CHILD_ID_OPTARIF, S_INFO );
-  present( CHILD_ID_ISOUSC, S_POWER );
+  present( CHILD_ID_ADSC, S_INFO, "Adresse Compteur");
+  present( CHILD_ID_VTIC, S_INFO );
+  present( CHILD_ID_NGTF, S_INFO );
+  present( CHILD_ID_LTARF, S_INFO );
+  present( CHILD_ID_EAST, S_POWER );
+  present( CHILD_ID_IRMS1, S_POWER );
+  present( CHILD_ID_IRMS2, S_POWER );
+  present( CHILD_ID_IRMS3, S_POWER );
+  present( CHILD_ID_URMS1, S_POWER );
+  present( CHILD_ID_URMS2, S_POWER );
+  present( CHILD_ID_URMS3, S_POWER );
+  present( CHILD_ID_PREF, S_POWER );
+  present( CHILD_ID_PCOUP, S_POWER );
+  present( CHILD_ID_SINSTS, S_POWER );
+  present( CHILD_ID_SINSTS1, S_POWER );
+  present( CHILD_ID_SINSTS2, S_POWER );
+  present( CHILD_ID_SINSTS3, S_POWER );
+  present( CHILD_ID_STGE, S_INFO );
+  present( CHILD_ID_MSG1, S_INFO );
+  present( CHILD_ID_NTAF, S_INFO );
+  present( CHILD_ID_NJOURF, S_INFO );
+  present( CHILD_ID_NJOURF1, S_INFO );
+ 
+
+  /*
   present( CHILD_ID_BASE, S_POWER );
   present( CHILD_ID_HCHC, S_POWER );
   present( CHILD_ID_HCHP, S_POWER );
@@ -191,7 +210,7 @@ void presentation()
   present( CHILD_ID_IMAX, S_POWER );
   present( CHILD_ID_PAPP, S_POWER );
   present( CHILD_ID_HHPHC, S_INFO );
-
+*/
 }
 
 //--------------------------------------------------------------------
@@ -199,9 +218,9 @@ void send_teleinfo()
 {
 boolean flag_hhphc = false;
 
-  // ADCO
-  send(msgVAR1_ADCO.setSensor(CHILD_ID_ADCO).set(teleinfo.ADCO));
-  
+  // ADSC
+  send(msgVAR1_ADSC.setSensor(CHILD_ID_ADSC).set(teleinfo._ADSC));
+/*  
   //OPTARIF
   send(msgVAR2_OPTARIF.setSensor(CHILD_ID_OPTARIF).set(teleinfo.OPTARIF));
 
@@ -260,6 +279,7 @@ boolean flag_hhphc = false;
   if (flag_hhphc == true) { // cas particulier, appartient a EJP et TEMPO
       send(msgVAR4_HHPHC.setSensor(CHILD_ID_HHPHC).set(teleinfo.HHPHC));
   }
+  */
 }
 
 //--------------------------------------------------------------------

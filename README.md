@@ -37,40 +37,75 @@ TELEINFORMATION
 
 Ces differents messages donnent les indications suivantes en fonction de l'abonnement souscrit :
 
-    numero d'identification du compteur, etiquette: ADCO (12 caracteres)
-    option tarifaire (type d'abonnement) : OPTARIF (4 car.)
-    intensite souscrite : ISOUSC ( 2 car. unite = amperes)
-    index si option = base : BASE ( 9 car. unite = Wh)
-    index heures creuses si option = heures creuses : HCHC ( 9 car. unite = Wh)
-    index heures pleines si option = heures creuses : HCHP ( 9 car. unite = Wh)
-    index heures normales si option = EJP : EJP HN ( 9 car. unite = Wh)
-    index heures de pointe mobile si option = EJP : EJP HPM ( 9 car. unite = Wh)
-    index heures creuses jours bleus si option = tempo : BBR HC JB ( 9 car. unite = Wh)
-    index heures pleines jours bleus si option = tempo : BBR HP JB ( 9 car. unite = Wh)
-    index heures creuses jours blancs si option = tempo : BBR HC JW ( 9 car. unite = Wh)
-    index heures pleines jours blancs si option = tempo : BBR HP JW ( 9 car. unite = Wh)
-    index heures creuses jours rouges si option = tempo : BBR HC JR ( 9 car. unite = Wh)
-    index heures pleines jours rouges si option = tempo : BBR HP JR ( 9 car. unite = Wh)
-    preavis EJP si option = EJP : PEJP ( 2 car.) 30mn avant periode EJP
-    periode tarifaire en cours : PTEC ( 4 car.)
-    couleur du lendemain si option = tempo : DEMAIN
-    intensite instantanee : IINST ( 3 car. unite = amperes)
-    Puissance apparente : PAPP ( 5 car. unite = Volt.amperes)
-    avertissement de depassement de puissance souscrite : ADPS ( 3 car. unite = amperes) (message emis uniquement en cas de depassement effectif, dans ce cas il est immediat)
-    intensite maximale : IMAX ( 3 car. unite = amperes)
-    groupe horaire si option = heures creuses ou tempo : HHPHC (1 car.)
-    mot d'etat (autocontrole) : MOTDETAT (6 car.)
+//  Adresse secondaire du compteur, etiquette: ADSC (12 caracteres) 
+//  Version de la TIC: VTIC (2 carateres)
+//  Date et heure courante: DATE (0 caractère) 
+//  Nom du calendrier tarifaire fournisseur: NGTF (16 carateres)
+//  Libellé tarif fournisseur en cours: LTARF  (16 carateres)
+//  Energie active soutirée totale: EAST (9 carateres)
+//  Energie active soutirée Fournisseur, index 01..10: EASF01 .. EASF10 (9 carateres)
+//  Energie active soutirée Distributeur, index 01..4: EASD01 .. EASD04 (9 carateres)
+//  Energie active injectée totale : EAIT (9 carateres)
+//  Energie réactive Q1..Q4 totale : ERQ1 .. ERQ4 (9 carateres)
+//  Courant efficace, phase 1..3 : IRMS1 .. IRMS3 (3 carateres)
+//  Tension efficace, phase 1..3 : URMS1 .. URMS3 (3 carateres)
+//  Puissance app. de référence : PREF (2 carateres)
+//  Puissance app. de coupure : PCOUP (2 carateres)
+//  Puissance app. Instantanée soutirée : SINSTS (5 carateres)
+//  Puissance app. Instantanée soutirée phase 1..3 : SINSTS1 .. SINSTS3 (5 carateres)
+//  Puissance app. max. soutirée n : SMAXSN (5 carateres)
+//  Puissance app. max. soutirée n phase 1..3 : SMAXSN1 .. SMAXSN3 (5 carateres)
+//  Puissance app. max. soutirée n-1 : SMAXSN-1 (5 carateres)
+//  Puissance app. max. soutirée n-1 phase 1..3 : SMAXSN1-1 .. SMAXSN3-1 (5 carateres)
+//  Puissance app. Instantanée injectée : SINSTI (5 carateres)
+//  Puissance app. max. injectée n : SMAXIN (5 carateres)
+//  Puissance app. max. injectée n-1 : SMAXIN-1 (5 carateres)
+//  Point n de la courbe de charge active soutirée : CCASN (5 carateres)
+//  Point n-1 de la courbe de charge active soutirée : CCASN-1 (5 carateres)
+//  Point n de la courbe de charge active injectée : CCAIN (5 carateres)
+//  Point n-1 de la courbe de charge active injectée : CCAIN-1 (5 carateres)
+//  Tension moy. ph. 1..3 : UMOY1 .. UMOY3 (3 carateres)
+//  Registre de Statuts : STGE  (8 carateres)
+//  Début Pointe Mobile 1..3 : DPM1 .. DPM3 (2 carateres)
+//  Fin Pointe Mobile 1..3 : FPM1 .. FPM3 (2 carateres)
+//  Message court : MSG1 (32 carateres)
+//  Message Ultra court  : MSG2 (16 carateres)
+//  PRM : PMR (14 carateres)
+//  Relais : RELAIS (3 carateres)
+//  Numéro de l’index tarifaire en cours : NTARF (2 carateres)
+//  Numéro du jour en cours calendrier fournisseur : NJOURF (2 carateres)
+//  Numéro du prochain jour calendrier fournisseur : NJOURF+1 (2 carateres)
+//  Profil du prochain jour calendrier fournisseu : PJOURF+1 (98 carateres)
+//  Profil du prochain jour de point : PPOINTE (98 carateres)
 
 Exemple de trames teleinfo
 
-    ADCO 040422040644 5 (N° d'identification du compteur : ADCO (12 caractères))
-    OPTARIF HC.. < (Option tarifaire (type d'abonnement) : OPTARIF (4 car.))
-    ISOUSC 45 ? (Intensité souscrite : ISOUSC ( 2 car. unité = ampères))
-    HCHC 077089461 0 (Index heures creuses si option = heures creuses : HCHC ( 9 car. unité = Wh))
-    HCHP 096066754 > (Index heures pleines si option = heures creuses : HCHP ( 9 car. unité = Wh))
-    PTEC HP.. (Période tarifaire en cours : PTEC ( 4 car.))
-    IINST 002 Y (Intensité instantanée : IINST ( 3 car. unité = ampères))
-    IMAX 044 G (Intensité maximale : IMAX ( 3 car. unité = ampères))
-    PAPP 00460 + (Puissance apparente : PAPP ( 5 car. unité = Volt.ampères))
-    HHPHC E 0 (Groupe horaire si option = heures creuses ou tempo : HHPHC (1 car.))
-    MOTDETAT 000000 B (Mot d'état (autocontrôle) : MOTDETAT (6 car.))
+VTIC	02	J
+DATE	E200426181830		A
+EAST	006231973	.
+EASF02	000000000	#
+EASF03	000000000	$
+EASF04	000000000	%
+EASF05	000000000	&
+EASF07	000000000	(
+EASF08	000000000	)
+EASF09	000000000	*
+EASD02	000000000	!
+EASD03	000000000	"
+EASD04	000000000	#
+URMS1	235	D
+PREF	09	H
+PCOUP	09	"
+SINSTS	01163	Q
+SMAXSN	E200426132229	06100	2
+SMAXSN-1	E200425151325	04700	Q
+CCASN	E200426180000	02120	4
+CCASN-1	E200426173000	02662	_
+UMOY1	E200426181000	234	,
+STGE	003A0001	:
+MSG1	     PAS DE          MESSAGE    	<
+PRM	01332272002530	_
+RELAIS	000	B
+NTARF	01	N
+NJOURF	00	&
+NJOURF+1	00	B

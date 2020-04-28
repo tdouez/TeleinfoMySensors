@@ -77,8 +77,10 @@
 
 #include <MySensors.h>
 
-uint32_t SEND_FREQUENCY =    5000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
-uint32_t lastSend = 0;
+uint32_t SEND_FREQUENCY_CONSO =    5000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
+uint32_t SEND_FREQUENCY_INFO =    60000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
+uint32_t lastSend_conso = 0;
+uint32_t lastSend_info = 0;
 
 // Variables Téléinfo---------------------
 struct teleinfo_s {
@@ -87,6 +89,7 @@ struct teleinfo_s {
   char NGTF[17]="";
   char LTARF[16]="";
   unsigned long EAST=0;
+  unsigned long EAIT=0;
   unsigned int IRMS1=0;
   unsigned int IRMS2=0;
   unsigned int IRMS3=0;
@@ -99,6 +102,7 @@ struct teleinfo_s {
   unsigned int SINSTS1=0;
   unsigned int SINSTS2=0;
   unsigned int SINSTS3=0;
+  unsigned int SINSTI=0;
   char STGE[9]="";
   char MSG1[32]="";
   char NTAF[2]="";
@@ -106,10 +110,6 @@ struct teleinfo_s {
   char NJOURF1[2]="";
 };
 teleinfo_s teleinfo;
-
-
-//#define LED_SEND         4  
-//#define LED_TELEINFO     3 
 
 
 #define CHILD_ID_ADSC     0
@@ -134,17 +134,16 @@ teleinfo_s teleinfo;
 #define CHILD_ID_NTAF     19
 #define CHILD_ID_NJOURF   20
 #define CHILD_ID_NJOURF1  21
+#define CHILD_ID_EAIT     22
+#define CHILD_ID_SINSTI   23
 
 
-MyMessage msgVAR1_ADSC( 0, V_TEXT);
-MyMessage msgVAR2_OPTARIF( 0, V_TEXT );
-MyMessage msgVAR3_PTEC( 0, V_TEXT );
-MyMessage msgVAR4_HHPHC( 0, V_TEXT );
-MyMessage msgVAR5_DEMAIN( 0, V_TEXT );
-MyMessage msgCURRENT( 0, V_CURRENT );
-MyMessage msgWATT( 0, V_WATT );
-MyMessage msgKWH( 0, V_KWH );
-
+MyMessage msgTEXT( 0, V_TEXT);        // S_INFO
+MyMessage msgCURRENT( 0, V_CURRENT ); // S_MULTIMETER
+MyMessage msgVOLTAGE( 0, V_VOLTAGE ); // S_MULTIMETER
+MyMessage msgWATT( 0, V_WATT ); // S_POWER
+MyMessage msgKWH( 0, V_KWH );   // S_POWER
+MyMessage msgVA( 0, V_VA );     // S_POWER
 
 //--------------------------------------------------------------------
 void setup()
@@ -157,6 +156,8 @@ void setup()
   Serial.println(F("  _| \\_,_| _|_|_| \\___| \\___|   ___/ _| \\___| \\_,_| \\___|"));
   Serial.print(F("                                             "));
   Serial.println(VERSION);
+
+  memset(&teleinfo, 0, sizeof(teleinfo));
 }
 
 //--------------------------------------------------------------------
@@ -167,120 +168,94 @@ void presentation()
 
   // Register this device as power sensor
   present( CHILD_ID_ADSC, S_INFO, "Adresse Compteur");
-  present( CHILD_ID_VTIC, S_INFO );
-  present( CHILD_ID_NGTF, S_INFO );
-  present( CHILD_ID_LTARF, S_INFO );
-  present( CHILD_ID_EAST, S_POWER );
-  present( CHILD_ID_IRMS1, S_POWER );
-  present( CHILD_ID_IRMS2, S_POWER );
-  present( CHILD_ID_IRMS3, S_POWER );
-  present( CHILD_ID_URMS1, S_POWER );
-  present( CHILD_ID_URMS2, S_POWER );
-  present( CHILD_ID_URMS3, S_POWER );
-  present( CHILD_ID_PREF, S_POWER );
-  present( CHILD_ID_PCOUP, S_POWER );
-  present( CHILD_ID_SINSTS, S_POWER );
-  present( CHILD_ID_SINSTS1, S_POWER );
-  present( CHILD_ID_SINSTS2, S_POWER );
-  present( CHILD_ID_SINSTS3, S_POWER );
-  present( CHILD_ID_STGE, S_INFO );
-  present( CHILD_ID_MSG1, S_INFO );
-  present( CHILD_ID_NTAF, S_INFO );
-  present( CHILD_ID_NJOURF, S_INFO );
-  present( CHILD_ID_NJOURF1, S_INFO );
- 
-
-  /*
-  present( CHILD_ID_BASE, S_POWER );
-  present( CHILD_ID_HCHC, S_POWER );
-  present( CHILD_ID_HCHP, S_POWER );
-  present( CHILD_ID_EJP_HN, S_POWER );
-  present( CHILD_ID_EJP_HPM, S_POWER );
-  present( CHILD_ID_BBR_HC_JB, S_POWER );
-  present( CHILD_ID_BBR_HP_JB, S_POWER );
-  present( CHILD_ID_BBR_HC_JW, S_POWER );
-  present( CHILD_ID_BBR_HP_JW, S_POWER );
-  present( CHILD_ID_BBR_HC_JR, S_POWER );
-  present( CHILD_ID_BBR_HP_JR, S_POWER );
-  present( CHILD_ID_PEJP, S_POWER );
-  present( CHILD_ID_PTEC, S_INFO );
-  present( CHILD_ID_DEMAIN, S_INFO );
-  present( CHILD_ID_IINST, S_POWER );
-  present( CHILD_ID_ADPS, S_POWER );
-  present( CHILD_ID_IMAX, S_POWER );
-  present( CHILD_ID_PAPP, S_POWER );
-  present( CHILD_ID_HHPHC, S_INFO );
-*/
+  present( CHILD_ID_VTIC, S_INFO, "Version TIC" );
+  present( CHILD_ID_NGTF, S_INFO, "Nom du calendrier tarifaire" );
+  present( CHILD_ID_LTARF, S_INFO, "Libellé tarif" );
+  present( CHILD_ID_EAST, S_POWER, "Energie active soutirée totale" );
+  present( CHILD_ID_EAIT, S_POWER, "Energie active injectée" );
+  present( CHILD_ID_IRMS1, S_MULTIMETER, "Courant efficace, phase 1" );
+  present( CHILD_ID_IRMS2, S_MULTIMETER, "Courant efficace, phase 2" );
+  present( CHILD_ID_IRMS3, S_MULTIMETER, "Courant efficace, phase 3" );
+  present( CHILD_ID_URMS1, S_MULTIMETER, "Tension efficace, phase 1" );
+  present( CHILD_ID_URMS2, S_MULTIMETER, "Tension efficace, phase 2" );
+  present( CHILD_ID_URMS3, S_MULTIMETER, "Tension efficace, phase 3" );
+  present( CHILD_ID_PREF, S_POWER, "Puissance apparente ref" );
+  present( CHILD_ID_PCOUP, S_POWER, "Puissance coupure" );
+  present( CHILD_ID_SINSTS, S_POWER, "Puissance apparente" );
+  present( CHILD_ID_SINSTS1, S_POWER, "Puissance apparente phase 1" );
+  present( CHILD_ID_SINSTS2, S_POWER, "Puissance apparente phase 2" );
+  present( CHILD_ID_SINSTS3, S_POWER, "Puissance apparente phase 3" );
+  present( CHILD_ID_SINSTI, S_POWER, "Puissance apparente injectée" );
+  present( CHILD_ID_STGE, S_INFO, "Registre de Statuts" );
+  present( CHILD_ID_MSG1, S_INFO, "Message" );
+  present( CHILD_ID_NTAF, S_INFO, "N° index tarifaire en cours" );
+  present( CHILD_ID_NJOURF, S_INFO, "N° jour en cours" );
+  present( CHILD_ID_NJOURF1, S_INFO, "N° prochain jour"  );
 }
 
 //--------------------------------------------------------------------
-void send_teleinfo()
+void send_teleinfo_conso()
+{
+boolean flag_hhphc = false;
+
+  // EAST
+  send(msgKWH.setSensor(CHILD_ID_EAST).set(teleinfo.EAST));
+  // EAIT
+  send(msgKWH.setSensor(CHILD_ID_EAIT).set(teleinfo.EAIT));
+  // IRMS1
+  send(msgCURRENT.setSensor(CHILD_ID_IRMS1).set(teleinfo.IRMS1));
+  // IRMS2
+  send(msgCURRENT.setSensor(CHILD_ID_IRMS2).set(teleinfo.IRMS2));
+  // IRMS3
+  send(msgCURRENT.setSensor(CHILD_ID_IRMS3).set(teleinfo.IRMS3));
+  // URMS1
+  send(msgVOLTAGE.setSensor(CHILD_ID_URMS1).set(teleinfo.URMS1));
+  // URMS2
+  send(msgVOLTAGE.setSensor(CHILD_ID_URMS2).set(teleinfo.URMS2));
+  // URMS3
+  send(msgVOLTAGE.setSensor(CHILD_ID_URMS3).set(teleinfo.URMS3));
+  // PREF
+  send(msgVA.setSensor(CHILD_ID_PREF).set(teleinfo.PREF));
+  // SINSTS
+  send(msgVA.setSensor(CHILD_ID_SINSTS).set(teleinfo.SINSTS));
+  // SINSTS1
+  send(msgVA.setSensor(CHILD_ID_SINSTS1).set(teleinfo.SINSTS1));
+  // SINSTS2
+  send(msgVA.setSensor(CHILD_ID_SINSTS2).set(teleinfo.SINSTS2));
+  // SINSTS3
+  send(msgVA.setSensor(CHILD_ID_SINSTS3).set(teleinfo.SINSTS3));
+  // SINSTI
+  send(msgVA.setSensor(CHILD_ID_SINSTI).set(teleinfo.SINSTI));
+  
+}
+
+//--------------------------------------------------------------------
+void send_teleinfo_info()
 {
 boolean flag_hhphc = false;
 
   // ADSC
-  send(msgVAR1_ADSC.setSensor(CHILD_ID_ADSC).set(teleinfo._ADSC));
-/*  
-  //OPTARIF
-  send(msgVAR2_OPTARIF.setSensor(CHILD_ID_OPTARIF).set(teleinfo.OPTARIF));
-
-  // ISOUC
-  send(msgCURRENT.setSensor(CHILD_ID_ISOUSC).set(teleinfo.ISOUSC));
-
-  // BASE -------
-  if (strcmp(teleinfo.OPTARIF, "BASE" ) == 0) {
-    send(msgKWH.setSensor(CHILD_ID_BASE).set(teleinfo.BASE));
-  }
-
-  // HC
-  if (strcmp(teleinfo.OPTARIF, "HC.." ) == 0) {
-      send(msgKWH.setSensor(CHILD_ID_HCHC).set(teleinfo.HCHC));
-      send(msgKWH.setSensor(CHILD_ID_HCHP).set(teleinfo.HCHP));
-  }
-
-  // EJP
-  if (strcmp(teleinfo.OPTARIF, "EJP." ) == 0) {
-      send(msgKWH.setSensor(CHILD_ID_EJP_HN).set(teleinfo.EJP_HN));
-      send(msgKWH.setSensor(CHILD_ID_EJP_HPM).set(teleinfo.EJP_HPM));
-      send(msgKWH.setSensor(CHILD_ID_PEJP).set(teleinfo.PEJP));
-
-      flag_hhphc = true;
-  }
-  
-  // BBR - TEMPO
-  if (strstr(teleinfo.OPTARIF, "BBR") != NULL) {
-      send(msgKWH.setSensor(CHILD_ID_BBR_HC_JB).set(teleinfo.BBR_HC_JB));
-      send(msgKWH.setSensor(CHILD_ID_BBR_HP_JB).set(teleinfo.BBR_HP_JB));
-      send(msgKWH.setSensor(CHILD_ID_BBR_HC_JW).set(teleinfo.BBR_HC_JW));
-      send(msgKWH.setSensor(CHILD_ID_BBR_HP_JW).set(teleinfo.BBR_HP_JW));
-      send(msgKWH.setSensor(CHILD_ID_BBR_HC_JR).set(teleinfo.BBR_HC_JR));
-      send(msgKWH.setSensor(CHILD_ID_BBR_HP_JR).set(teleinfo.BBR_HP_JR));
-      send(msgVAR5_DEMAIN.setSensor(CHILD_ID_DEMAIN).set(teleinfo.DEMAIN));
-
-      flag_hhphc = true;
-  }
-  
-  // PTEC
-  send(msgVAR3_PTEC.setSensor(CHILD_ID_PTEC).set(teleinfo.PTEC));
-
-  // IINST
-  send(msgCURRENT.setSensor(CHILD_ID_IINST).set(teleinfo.IINST));
-
-  // PAPP
-  send(msgWATT.setSensor(CHILD_ID_PAPP).set(teleinfo.PAPP));
-
-  // ADPS
-  send(msgCURRENT.setSensor(CHILD_ID_ADPS).set(teleinfo.ADPS));
-
-  // IMAX
-  send(msgCURRENT.setSensor(CHILD_ID_IMAX).set(teleinfo.IMAX));
-
-  // HHPHC
-  if (flag_hhphc == true) { // cas particulier, appartient a EJP et TEMPO
-      send(msgVAR4_HHPHC.setSensor(CHILD_ID_HHPHC).set(teleinfo.HHPHC));
-  }
-  */
+  send(msgTEXT.setSensor(CHILD_ID_ADSC).set(teleinfo._ADSC));
+  // VTIC
+  send(msgTEXT.setSensor(CHILD_ID_VTIC).set(teleinfo.VTIC));
+  // NGTF
+  send(msgTEXT.setSensor(CHILD_ID_NGTF).set(teleinfo.NGTF));
+  // LTARF
+  send(msgTEXT.setSensor(CHILD_ID_LTARF).set(teleinfo.LTARF));
+  // PCOUP
+  send(msgVA.setSensor(CHILD_ID_PCOUP).set(teleinfo.PCOUP));
+  // STGE
+  send(msgTEXT.setSensor(CHILD_ID_STGE).set(teleinfo.STGE));
+  // MSG1
+  send(msgTEXT.setSensor(CHILD_ID_MSG1).set(teleinfo.MSG1));
+  // NTAF
+  send(msgTEXT.setSensor(CHILD_ID_NTAF).set(teleinfo.NTAF));
+  // NJOURF
+  send(msgTEXT.setSensor(CHILD_ID_NJOURF).set(teleinfo.NJOURF));
+  // NJOURF1
+  send(msgTEXT.setSensor(CHILD_ID_NJOURF1).set(teleinfo.NJOURF1));
 }
+
 
 //--------------------------------------------------------------------
 void loop()
@@ -290,12 +265,16 @@ void loop()
   // lecture teleinfo -------------------------
   read_teleinfo();
  
-  // Only send values at a maximum frequency 
-  if (currentTime - lastSend > SEND_FREQUENCY) {
-    send_teleinfo();
-    //change_etat_led_send();
-    lastSend = currentTime;
+  // Envoi les infos de consommation ---------- 
+  if (currentTime - lastSend_conso > SEND_FREQUENCY_CONSO) {
+    send_teleinfo_conso();
+    lastSend_conso = currentTime;
   } 
-  
+
+   // Envoi les infos techniques ---------- 
+  if (currentTime - lastSend_info > SEND_FREQUENCY_INFO) {
+    send_teleinfo_info();
+    lastSend_info = currentTime;
+  } 
 
 }

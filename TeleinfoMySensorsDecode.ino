@@ -95,6 +95,10 @@ void traitement_trame(char *buff)
       teleinfo.EAST = atol(&buff[5]);
       return;
     }
+    if (strncmp("EAIT", &buff[0] , 4)==0) {
+      teleinfo.EAIT = atol(&buff[5]);
+      return;
+    }
     if (strncmp("IRMS1", &buff[0] , 5)==0) {
       teleinfo.IRMS1 = atoi(&buff[6]);
       return;
@@ -141,6 +145,10 @@ void traitement_trame(char *buff)
     }
     if (strncmp("SINSTS3", &buff[0] , 7)==0) {
       teleinfo.SINSTS3 = atoi(&buff[8]);
+      return;
+    }
+    if (strncmp("SINSTI", &buff[0] , 6)==0) {
+      teleinfo.SINSTI = atoi(&buff[7]);
       return;
     }
     if (strncmp("STGE", &buff[0] , 4)==0) {

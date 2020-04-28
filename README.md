@@ -10,28 +10,30 @@ Projet utilisant un Arduino Pro mini et un module NRF24L01
 
 Liste des informations remontées via MySensors :
 
-    CHILD_ID_ADCO 0
-    CHILD_ID_OPTARIF 1
-    CHILD_ID_ISOUSC 2
-    CHILD_ID_BASE 3
-    CHILD_ID_HCHC 4
-    CHILD_ID_HCHP 5
-    CHILD_ID_EJP_HN 6
-    CHILD_ID_EJP_HPM 7
-    CHILD_ID_BBR_HC_JB 8
-    CHILD_ID_BBR_HP_JB 9
-    CHILD_ID_BBR_HC_JW 10
-    CHILD_ID_BBR_HP_JW 11
-    CHILD_ID_BBR_HC_JR 12
-    CHILD_ID_BBR_HP_JR 13
-    CHILD_ID_PEJP 14
-    CHILD_ID_PTEC 15
-    CHILD_ID_DEMAIN 16
-    CHILD_ID_IINST 17
-    CHILD_ID_PAPP 18
-    CHILD_ID_ADPS 19
-    CHILD_ID_IMAX 20
-    CHILD_ID_HHPHC 21
+ CHILD_ID_ADSC     0
+ CHILD_ID_VTIC     1
+ CHILD_ID_NGTF     2
+ CHILD_ID_LTARF    3
+ CHILD_ID_EAST     4
+ CHILD_ID_IRMS1    5
+ CHILD_ID_IRMS2    6
+ CHILD_ID_IRMS3    7
+ CHILD_ID_URMS1    8
+ CHILD_ID_URMS2    9
+ CHILD_ID_URMS3    10
+ CHILD_ID_PREF     11
+ CHILD_ID_PCOUP    12
+ CHILD_ID_SINSTS   13
+ CHILD_ID_SINSTS1  14
+ CHILD_ID_SINSTS2  15
+ CHILD_ID_SINSTS3  16
+ CHILD_ID_STGE     17
+ CHILD_ID_MSG1     18
+ CHILD_ID_NTAF     19
+ CHILD_ID_NJOURF   20
+ CHILD_ID_NJOURF1  21
+ CHILD_ID_EAIT     22
+ CHILD_ID_SINSTI   23
 
 TELEINFORMATION
 
@@ -75,7 +77,7 @@ Ces differents messages donnent les indications suivantes en fonction de l'abonn
 //  Numéro de l’index tarifaire en cours : NTARF (2 carateres)
 //  Numéro du jour en cours calendrier fournisseur : NJOURF (2 carateres)
 //  Numéro du prochain jour calendrier fournisseur : NJOURF+1 (2 carateres)
-//  Profil du prochain jour calendrier fournisseu : PJOURF+1 (98 carateres)
+//  Profil du prochain jour calendrier fournisseur : PJOURF+1 (98 carateres)
 //  Profil du prochain jour de point : PPOINTE (98 carateres)
 
 Exemple de trames teleinfo

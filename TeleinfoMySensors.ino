@@ -50,6 +50,9 @@
 // 2019/12/22 - FB V1.0.5 - optimisation
 // 2020/04/25 - FB V1.0.6 - ADCO bug fix
 // 2020/04/25 - FB V1.1.0 - Mode standard
+// 2020/08/18 - FB V1.1.1 - Correction sur NTARF et LTARF - Merci David MARLINGE
+//                        - Ajout EASF01..10, EASD01..04 et ERQ1..4
+//                        - Optimisation mémoire
 //--------------------------------------------------------------------
 // Enable debug prints
 //#define MY_DEBUG
@@ -57,7 +60,7 @@
 
 //#define MY_NODE_ID 2
 
-#define VERSION   "v1.1.0"
+#define VERSION   "v1.1.1"
 
 // Set LOW transmit power level as default, if you have an amplified NRF-module and
 // power your radio separately with a good regulator you can turn up PA level.
@@ -87,7 +90,7 @@ struct teleinfo_s {
   char _ADSC[13]="";
   char VTIC[3]="";
   char NGTF[17]="";
-  char LTARF[16]="";
+  char LTARF[17]="";
   unsigned long EAST=0;
   unsigned long EAIT=0;
   unsigned int IRMS1=0;
@@ -104,10 +107,28 @@ struct teleinfo_s {
   unsigned int SINSTS3=0;
   unsigned int SINSTI=0;
   char STGE[9]="";
-  char MSG1[32]="";
-  char NTAF[2]="";
-  char NJOURF[2]="";
-  char NJOURF1[2]="";
+  char MSG1[33]="";
+  char NTARF[3]="";
+  char NJOURF[3]="";
+  char NJOURF1[3]="";
+  unsigned long EASF01=0;
+  unsigned long EASF02=0;
+  unsigned long EASF03=0;
+  unsigned long EASF04=0;
+  unsigned long EASF05=0;
+  unsigned long EASF06=0;
+  unsigned long EASF07=0;
+  unsigned long EASF08=0;
+  unsigned long EASF09=0;
+  unsigned long EASF10=0;
+  unsigned long EASD01=0;
+  unsigned long EASD02=0;
+  unsigned long EASD03=0;
+  unsigned long EASD04=0;
+  unsigned long ERQ1=0;
+  unsigned long ERQ2=0;
+  unsigned long ERQ3=0;
+  unsigned long ERQ4=0;
 };
 teleinfo_s teleinfo;
 
@@ -131,12 +152,29 @@ teleinfo_s teleinfo;
 #define CHILD_ID_SINSTS3  16
 #define CHILD_ID_STGE     17
 #define CHILD_ID_MSG1     18
-#define CHILD_ID_NTAF     19
+#define CHILD_ID_NTARF    19
 #define CHILD_ID_NJOURF   20
 #define CHILD_ID_NJOURF1  21
 #define CHILD_ID_EAIT     22
 #define CHILD_ID_SINSTI   23
-
+#define CHILD_ID_EASF01   24
+#define CHILD_ID_EASF02   25
+#define CHILD_ID_EASF03   26
+#define CHILD_ID_EASF04   27
+#define CHILD_ID_EASF05   28
+#define CHILD_ID_EASF06   29
+#define CHILD_ID_EASF07   30
+#define CHILD_ID_EASF08   31
+#define CHILD_ID_EASF09   32
+#define CHILD_ID_EASF10   33
+#define CHILD_ID_EASD01   34
+#define CHILD_ID_EASD02   35
+#define CHILD_ID_EASD03   36
+#define CHILD_ID_EASD04   37
+#define CHILD_ID_ERQ1     38
+#define CHILD_ID_ERQ2     39
+#define CHILD_ID_ERQ3     40
+#define CHILD_ID_ERQ4     41
 
 MyMessage msgTEXT( 0, V_TEXT);        // S_INFO
 MyMessage msgCURRENT( 0, V_CURRENT ); // S_MULTIMETER
@@ -167,30 +205,51 @@ void presentation()
   sendSketchInfo("Teleinfo", VERSION);
 
   // Register this device as power sensor
-  present( CHILD_ID_ADSC, S_INFO, "Adresse Compteur");
-  present( CHILD_ID_VTIC, S_INFO, "Version TIC" );
-  present( CHILD_ID_NGTF, S_INFO, "Nom du calendrier tarifaire" );
-  present( CHILD_ID_LTARF, S_INFO, "Libellé tarif" );
-  present( CHILD_ID_EAST, S_POWER, "Energie active soutirée totale" );
-  present( CHILD_ID_EAIT, S_POWER, "Energie active injectée" );
-  present( CHILD_ID_IRMS1, S_MULTIMETER, "Courant efficace, phase 1" );
-  present( CHILD_ID_IRMS2, S_MULTIMETER, "Courant efficace, phase 2" );
-  present( CHILD_ID_IRMS3, S_MULTIMETER, "Courant efficace, phase 3" );
-  present( CHILD_ID_URMS1, S_MULTIMETER, "Tension efficace, phase 1" );
-  present( CHILD_ID_URMS2, S_MULTIMETER, "Tension efficace, phase 2" );
-  present( CHILD_ID_URMS3, S_MULTIMETER, "Tension efficace, phase 3" );
-  present( CHILD_ID_PREF, S_POWER, "Puissance apparente ref" );
-  present( CHILD_ID_PCOUP, S_POWER, "Puissance coupure" );
-  present( CHILD_ID_SINSTS, S_POWER, "Puissance apparente" );
-  present( CHILD_ID_SINSTS1, S_POWER, "Puissance apparente phase 1" );
-  present( CHILD_ID_SINSTS2, S_POWER, "Puissance apparente phase 2" );
-  present( CHILD_ID_SINSTS3, S_POWER, "Puissance apparente phase 3" );
-  present( CHILD_ID_SINSTI, S_POWER, "Puissance apparente injectée" );
-  present( CHILD_ID_STGE, S_INFO, "Registre de Statuts" );
-  present( CHILD_ID_MSG1, S_INFO, "Message" );
-  present( CHILD_ID_NTAF, S_INFO, "N° index tarifaire en cours" );
-  present( CHILD_ID_NJOURF, S_INFO, "N° jour en cours" );
-  present( CHILD_ID_NJOURF1, S_INFO, "N° prochain jour"  );
+  present( CHILD_ID_ADSC, S_INFO, F("Adresse Compteur"));
+  present( CHILD_ID_VTIC, S_INFO, F("Version TIC"));
+  present( CHILD_ID_NGTF, S_INFO, F("Nom du calendrier tarifaire"));
+  present( CHILD_ID_LTARF, S_INFO, F("Libellé tarif"));
+  present( CHILD_ID_EAST, S_POWER, F("Energie active soutirée totale"));
+  present( CHILD_ID_EAIT, S_POWER, F("Energie active injectée"));
+  present( CHILD_ID_IRMS1, S_MULTIMETER, F("Courant efficace, phase 1"));
+  present( CHILD_ID_IRMS2, S_MULTIMETER, F("Courant efficace, phase 2"));
+  present( CHILD_ID_IRMS3, S_MULTIMETER, F("Courant efficace, phase 3"));
+  present( CHILD_ID_URMS1, S_MULTIMETER, F("Tension efficace, phase 1"));
+  present( CHILD_ID_URMS2, S_MULTIMETER, F("Tension efficace, phase 2"));
+  present( CHILD_ID_URMS3, S_MULTIMETER, F("Tension efficace, phase 3"));
+  present( CHILD_ID_PREF, S_POWER, F("Puissance apparente ref"));
+  present( CHILD_ID_PCOUP, S_POWER, F("Puissance coupure"));
+  present( CHILD_ID_SINSTS, S_POWER, F("Puissance apparente"));
+  present( CHILD_ID_SINSTS1, S_POWER, F("Puissance apparente phase 1"));
+  present( CHILD_ID_SINSTS2, S_POWER, F("Puissance apparente phase 2"));
+  present( CHILD_ID_SINSTS3, S_POWER, F("Puissance apparente phase 3"));
+  present( CHILD_ID_SINSTI, S_POWER, F("Puissance apparente injectée"));
+  present( CHILD_ID_STGE, S_INFO, F("Registre de Statuts"));
+  present( CHILD_ID_MSG1, S_INFO, F("Message"));
+  present( CHILD_ID_NTARF, S_INFO, F("N° index tarifaire en cours"));
+  present( CHILD_ID_NJOURF, S_INFO, F("N° jour en cours"));
+  present( CHILD_ID_NJOURF1, S_INFO, F("N° prochain jour"));
+  
+  present( CHILD_ID_EASF01, S_POWER, F("Energie active soutirée F, index 1"));
+  present( CHILD_ID_EASF02, S_POWER, F("Energie active soutirée F, index 2"));
+  present( CHILD_ID_EASF03, S_POWER, F("Energie active soutirée F, index 3"));
+  present( CHILD_ID_EASF04, S_POWER, F("Energie active soutirée F, index 4"));
+  present( CHILD_ID_EASF05, S_POWER, F("Energie active soutirée F, index 5"));
+  present( CHILD_ID_EASF06, S_POWER, F("Energie active soutirée F, index 6"));
+  present( CHILD_ID_EASF07, S_POWER, F("Energie active soutirée F, index 7"));
+  present( CHILD_ID_EASF08, S_POWER, F("Energie active soutirée F, index 8"));
+  present( CHILD_ID_EASF09, S_POWER, F("Energie active soutirée F, index 9"));
+  present( CHILD_ID_EASF10, S_POWER, F("Energie active soutirée F, index 10"));
+  present( CHILD_ID_EASD01, S_POWER, F("Energie active soutirée D, index 1"));
+  present( CHILD_ID_EASD01, S_POWER, F("Energie active soutirée D, index 1"));
+  present( CHILD_ID_EASD02, S_POWER, F("Energie active soutirée D, index 2"));
+  present( CHILD_ID_EASD03, S_POWER, F("Energie active soutirée D, index 3"));
+  present( CHILD_ID_EASD04, S_POWER, F("Energie active soutirée D, index 4"));
+  present( CHILD_ID_ERQ1, S_POWER, F("Energie réactive Q1 totale"));
+  present( CHILD_ID_ERQ2, S_POWER, F("Energie réactive Q2 totale"));
+  present( CHILD_ID_ERQ3, S_POWER, F("Energie réactive Q3 totale"));
+  present( CHILD_ID_ERQ4, S_POWER, F("Energie réactive Q4 totale"));
+
 }
 
 //--------------------------------------------------------------------
@@ -226,6 +285,27 @@ boolean flag_hhphc = false;
   send(msgVA.setSensor(CHILD_ID_SINSTS3).set(teleinfo.SINSTS3));
   // SINSTI
   send(msgVA.setSensor(CHILD_ID_SINSTI).set(teleinfo.SINSTI));
+  // EASF01..10
+  send(msgVA.setSensor(CHILD_ID_EASF01).set(teleinfo.EASF01));
+  send(msgVA.setSensor(CHILD_ID_EASF02).set(teleinfo.EASF02));
+  send(msgVA.setSensor(CHILD_ID_EASF03).set(teleinfo.EASF03));
+  send(msgVA.setSensor(CHILD_ID_EASF04).set(teleinfo.EASF04));
+  send(msgVA.setSensor(CHILD_ID_EASF05).set(teleinfo.EASF05));
+  send(msgVA.setSensor(CHILD_ID_EASF06).set(teleinfo.EASF06));
+  send(msgVA.setSensor(CHILD_ID_EASF07).set(teleinfo.EASF07));
+  send(msgVA.setSensor(CHILD_ID_EASF08).set(teleinfo.EASF08));
+  send(msgVA.setSensor(CHILD_ID_EASF09).set(teleinfo.EASF09));
+  send(msgVA.setSensor(CHILD_ID_EASF10).set(teleinfo.EASF10));
+  // EASD01..4 
+  send(msgVA.setSensor(CHILD_ID_EASD01).set(teleinfo.EASD01));
+  send(msgVA.setSensor(CHILD_ID_EASD02).set(teleinfo.EASD02));
+  send(msgVA.setSensor(CHILD_ID_EASD03).set(teleinfo.EASD03));
+  send(msgVA.setSensor(CHILD_ID_EASD04).set(teleinfo.EASD04));
+  // ERQ1..4 
+  send(msgVA.setSensor(CHILD_ID_ERQ1).set(teleinfo.ERQ1));
+  send(msgVA.setSensor(CHILD_ID_ERQ2).set(teleinfo.ERQ2));
+  send(msgVA.setSensor(CHILD_ID_ERQ3).set(teleinfo.ERQ3));
+  send(msgVA.setSensor(CHILD_ID_ERQ4).set(teleinfo.ERQ4));
   
 }
 
@@ -248,8 +328,8 @@ boolean flag_hhphc = false;
   send(msgTEXT.setSensor(CHILD_ID_STGE).set(teleinfo.STGE));
   // MSG1
   send(msgTEXT.setSensor(CHILD_ID_MSG1).set(teleinfo.MSG1));
-  // NTAF
-  send(msgTEXT.setSensor(CHILD_ID_NTAF).set(teleinfo.NTAF));
+  // NTARF
+  send(msgTEXT.setSensor(CHILD_ID_NTARF).set(teleinfo.NTARF));
   // NJOURF
   send(msgTEXT.setSensor(CHILD_ID_NJOURF).set(teleinfo.NJOURF));
   // NJOURF1

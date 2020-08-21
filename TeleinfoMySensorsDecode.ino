@@ -86,8 +86,8 @@ void traitement_trame(char *buff)
       teleinfo.NGTF[16] = '\0';
       return;
     }
-    if (strncmp("LTARF", &buff[0] , 4)==0) {
-      strncpy(teleinfo.LTARF, &buff[5], 16);
+    if (strncmp("LTARF", &buff[0] , 5)==0) {
+      strncpy(teleinfo.LTARF, &buff[6], 16);
       teleinfo.LTARF[16] = '\0';
       return;
     }
@@ -99,28 +99,32 @@ void traitement_trame(char *buff)
       teleinfo.EAIT = atol(&buff[5]);
       return;
     }
-    if (strncmp("IRMS1", &buff[0] , 5)==0) {
-      teleinfo.IRMS1 = atoi(&buff[6]);
+    if (strncmp("IRMS", &buff[0] , 4)==0) {
+      switch(buff[4]) {
+        case '1':
+          teleinfo.IRMS1 = atoi(&buff[6]);
+          break;
+        case '2':
+          teleinfo.IRMS2 = atoi(&buff[6]);
+          break;
+        case '3':
+          teleinfo.IRMS3 = atoi(&buff[6]);
+          break;
+      }
       return;
     }
-    if (strncmp("IRMS2", &buff[0] , 5)==0) {
-      teleinfo.IRMS2 = atoi(&buff[6]);
-      return;
-    }
-    if (strncmp("IRMS3", &buff[0] , 5)==0) {
-      teleinfo.IRMS3 = atoi(&buff[6]);
-      return;
-    }
-    if (strncmp("URMS1", &buff[0] , 5)==0) {
-      teleinfo.URMS1 = atoi(&buff[6]);
-      return;
-    }
-    if (strncmp("URMS2", &buff[0] , 5)==0) {
-      teleinfo.URMS2 = atoi(&buff[6]);
-      return;
-    }
-    if (strncmp("URMS3", &buff[0] , 5)==0) {
-      teleinfo.URMS3 = atoi(&buff[6]);
+    if (strncmp("URMS", &buff[0] , 4)==0) {
+      switch(buff[4]) {
+        case '1':
+          teleinfo.URMS1 = atoi(&buff[6]);
+          break;
+        case '2':
+          teleinfo.URMS2 = atoi(&buff[6]);
+          break;
+        case '3':
+          teleinfo.URMS3 = atoi(&buff[6]);
+          break;
+      }
       return;
     }
     if (strncmp("PREF", &buff[0] , 4)==0) {
@@ -131,24 +135,36 @@ void traitement_trame(char *buff)
       teleinfo.PCOUP = atoi(&buff[6]);
       return;
     }
-    if (strncmp("SINSTS", &buff[0] , 6)==0) {
-      teleinfo.SINSTS = atoi(&buff[7]);
-      return;
-    }
-    if (strncmp("SINSTS1", &buff[0] , 7)==0) {
-      teleinfo.SINSTS1 = atoi(&buff[8]);
-      return;
-    }
-    if (strncmp("SINSTS2", &buff[0] , 7)==0) {
-      teleinfo.SINSTS2 = atoi(&buff[8]);
-      return;
-    }
-    if (strncmp("SINSTS3", &buff[0] , 7)==0) {
-      teleinfo.SINSTS3 = atoi(&buff[8]);
-      return;
-    }
-    if (strncmp("SINSTI", &buff[0] , 6)==0) {
-      teleinfo.SINSTI = atoi(&buff[7]);
+    if (strncmp("SINST", &buff[0] , 5)==0) {
+      Serial.print("5: ");
+      Serial.println(buff[5]);
+      Serial.print("6:");
+      Serial.println(buff[6]);
+      Serial.print("7:");
+      Serial.println(buff[7]);
+      Serial.print("8:");
+      Serial.println(buff[8]);
+      switch(buff[5]) {
+        case 'S':
+          switch(buff[6]) {
+            case '1':
+              teleinfo.SINSTS1 = atoi(&buff[8]);
+              break;
+            case '2':
+              teleinfo.SINSTS2 = atoi(&buff[8]);
+              break;
+            case '3':
+              teleinfo.SINSTS3 = atoi(&buff[8]);
+              break;
+            default:
+              teleinfo.SINSTS = atoi(&buff[7]);
+              break;
+          }
+          break;
+        case 'I':
+          teleinfo.SINSTI = atoi(&buff[7]);
+          break;
+      }
       return;
     }
     if (strncmp("STGE", &buff[0] , 4)==0) {
@@ -161,9 +177,9 @@ void traitement_trame(char *buff)
       teleinfo.MSG1[32] = '\0';
       return;
     }
-    if (strncmp("NTAF", &buff[0] , 4)==0) {
-      strncpy(teleinfo.NTAF, &buff[5], 2);
-      teleinfo.NTAF[2] = '\0';
+    if (strncmp("NTARF", &buff[0] , 5)==0) {
+      strncpy(teleinfo.NTARF, &buff[6], 2);
+      teleinfo.NTARF[2] = '\0';
       return;
     }
     if (strncmp("NJOURF", &buff[0] , 6)==0) {
@@ -174,6 +190,75 @@ void traitement_trame(char *buff)
     if (strncmp("NJOURF1", &buff[0] , 7)==0) {
       strncpy(teleinfo.NJOURF1, &buff[8], 2);
       teleinfo.NJOURF1[2] = '\0';
+      return;
+    }
+    if (strncmp("EASF", &buff[0] , 4)==0) {
+      switch(buff[5]) {
+        case '0':
+          teleinfo.EASF10 = atol(&buff[7]);
+          break;
+        case '1':
+          teleinfo.EASF01 = atol(&buff[7]);
+          break;
+        case '2':
+          teleinfo.EASF02 = atol(&buff[7]);
+          break;
+        case '3':
+          teleinfo.EASF03 = atol(&buff[7]);
+          break;
+        case '4':
+          teleinfo.EASF04 = atol(&buff[7]);
+          break;
+        case '5':
+          teleinfo.EASF05 = atol(&buff[7]);
+          break;
+        case '6':
+          teleinfo.EASF06 = atol(&buff[7]);
+          break;
+        case '7':
+          teleinfo.EASF07 = atol(&buff[7]);
+          break;
+        case '8':
+          teleinfo.EASF08 = atol(&buff[7]);
+          break;
+        case '9':
+          teleinfo.EASF09 = atol(&buff[7]);
+          break;
+      }
+      return;
+    }
+    if (strncmp("EASD", &buff[0] , 4)==0) {
+      switch(buff[5]) {
+        case '1':
+          teleinfo.EASD01 = atol(&buff[7]);
+          break;
+        case '2':
+          teleinfo.EASD02 = atol(&buff[7]);
+          break;
+        case '3':
+          teleinfo.EASD03 = atol(&buff[7]);
+          break;
+        case '4':
+          teleinfo.EASD04 = atol(&buff[7]);
+          break;
+      }
+      return;
+    }
+    if (strncmp("ERQ", &buff[0] , 3)==0) {
+      switch(buff[3]) {
+        case '1':
+          teleinfo.ERQ1 = atol(&buff[5]);
+          break;
+        case '2':
+          teleinfo.ERQ2 = atol(&buff[5]);
+          break;
+        case '3':
+          teleinfo.ERQ3 = atol(&buff[5]);
+          break;
+        case '4':
+          teleinfo.ERQ4 = atol(&buff[5]);
+          break;
+      }
       return;
     }
 }

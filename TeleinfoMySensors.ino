@@ -53,6 +53,9 @@
 // 2020/08/18 - FB V1.1.1 - Correction sur NTARF et LTARF - Merci David MARLINGE
 //                        - Ajout EASF01..10, EASD01..04 et ERQ1..4
 //                        - Optimisation mémoire
+// 2020/08/26 - FB V1.1.2 - Ajout delais sur presentation et send, afin de soulager la gateway
+//						            - Envoi données producteur et triphasé si besoin
+//						            - Correction sur send EASF et EADS en WH au lieu du VA
 //--------------------------------------------------------------------
 // Enable debug prints
 //#define MY_DEBUG
@@ -60,7 +63,7 @@
 
 //#define MY_NODE_ID 2
 
-#define VERSION   "v1.1.1"
+#define VERSION   "v1.1.2"
 
 // Set LOW transmit power level as default, if you have an amplified NRF-module and
 // power your radio separately with a good regulator you can turn up PA level.
@@ -78,12 +81,20 @@
 #define MY_DEFAULT_RX_LED_PIN  13 // Receive led pin, on board LED
 #define MY_DEFAULT_TX_LED_PIN  3  // 
 
+#define GW_DELAY	25 // ms
+
 #include <MySensors.h>
 
 uint32_t SEND_FREQUENCY_CONSO =    5000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
-uint32_t SEND_FREQUENCY_INFO =    60000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
+uint32_t SEND_FREQUENCY_INFO =    90000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
 uint32_t lastSend_conso = 0;
 uint32_t lastSend_info = 0;
+
+unsigned long startTime; // Date démarrage 
+
+boolean mode_producteur = false;
+boolean mode_triphase = false;
+
 
 // Variables Téléinfo---------------------
 struct teleinfo_s {
@@ -175,6 +186,7 @@ teleinfo_s teleinfo;
 #define CHILD_ID_ERQ2     39
 #define CHILD_ID_ERQ3     40
 #define CHILD_ID_ERQ4     41
+#define CHILD_ID_START    99
 
 MyMessage msgTEXT( 0, V_TEXT);        // S_INFO
 MyMessage msgCURRENT( 0, V_CURRENT ); // S_MULTIMETER
@@ -182,6 +194,18 @@ MyMessage msgVOLTAGE( 0, V_VOLTAGE ); // S_MULTIMETER
 MyMessage msgWATT( 0, V_WATT ); // S_POWER
 MyMessage msgKWH( 0, V_KWH );   // S_POWER
 MyMessage msgVA( 0, V_VA );     // S_POWER
+MyMessage msgVAR1( 0, V_VAR1 ); // Custom value
+
+
+//-----------------------------------------------------------------------
+// This is called when a new time value was received
+void receiveTime(unsigned long controllerTime) 
+{
+  // incoming time 
+  Serial.print(">> Time received from gw: ");
+  Serial.println(controllerTime);
+  startTime = controllerTime;
+}
 
 //--------------------------------------------------------------------
 void setup()
@@ -203,52 +227,98 @@ void presentation()
 {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo("Teleinfo", VERSION);
-
+  
+  // Récupere l'heure de la gateway
+  requestTime();
+  
   // Register this device as power sensor
   present( CHILD_ID_ADSC, S_INFO, F("Adresse Compteur"));
+  wait(GW_DELAY);
   present( CHILD_ID_VTIC, S_INFO, F("Version TIC"));
+  wait(GW_DELAY);
   present( CHILD_ID_NGTF, S_INFO, F("Nom du calendrier tarifaire"));
+  wait(GW_DELAY);
   present( CHILD_ID_LTARF, S_INFO, F("Libellé tarif"));
+  wait(GW_DELAY);
   present( CHILD_ID_EAST, S_POWER, F("Energie active soutirée totale"));
+  wait(GW_DELAY);
   present( CHILD_ID_EAIT, S_POWER, F("Energie active injectée"));
+  wait(GW_DELAY);
   present( CHILD_ID_IRMS1, S_MULTIMETER, F("Courant efficace, phase 1"));
+  wait(GW_DELAY);
   present( CHILD_ID_IRMS2, S_MULTIMETER, F("Courant efficace, phase 2"));
+  wait(GW_DELAY);
   present( CHILD_ID_IRMS3, S_MULTIMETER, F("Courant efficace, phase 3"));
+  wait(GW_DELAY);
   present( CHILD_ID_URMS1, S_MULTIMETER, F("Tension efficace, phase 1"));
+  wait(GW_DELAY);
   present( CHILD_ID_URMS2, S_MULTIMETER, F("Tension efficace, phase 2"));
+  wait(GW_DELAY);
   present( CHILD_ID_URMS3, S_MULTIMETER, F("Tension efficace, phase 3"));
+  wait(GW_DELAY);
   present( CHILD_ID_PREF, S_POWER, F("Puissance apparente ref"));
+  wait(GW_DELAY);
   present( CHILD_ID_PCOUP, S_POWER, F("Puissance coupure"));
+  wait(GW_DELAY);
   present( CHILD_ID_SINSTS, S_POWER, F("Puissance apparente"));
+  wait(GW_DELAY);
   present( CHILD_ID_SINSTS1, S_POWER, F("Puissance apparente phase 1"));
+  wait(GW_DELAY);
   present( CHILD_ID_SINSTS2, S_POWER, F("Puissance apparente phase 2"));
+  wait(GW_DELAY);
   present( CHILD_ID_SINSTS3, S_POWER, F("Puissance apparente phase 3"));
+  wait(GW_DELAY);
   present( CHILD_ID_SINSTI, S_POWER, F("Puissance apparente injectée"));
+  wait(GW_DELAY);
   present( CHILD_ID_STGE, S_INFO, F("Registre de Statuts"));
+  wait(GW_DELAY);
   present( CHILD_ID_MSG1, S_INFO, F("Message"));
+  wait(GW_DELAY);
   present( CHILD_ID_NTARF, S_INFO, F("N° index tarifaire en cours"));
+  wait(GW_DELAY);
   present( CHILD_ID_NJOURF, S_INFO, F("N° jour en cours"));
+  wait(GW_DELAY);
   present( CHILD_ID_NJOURF1, S_INFO, F("N° prochain jour"));
-  
+  wait(GW_DELAY);
   present( CHILD_ID_EASF01, S_POWER, F("Energie active soutirée F, index 1"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASF02, S_POWER, F("Energie active soutirée F, index 2"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASF03, S_POWER, F("Energie active soutirée F, index 3"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASF04, S_POWER, F("Energie active soutirée F, index 4"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASF05, S_POWER, F("Energie active soutirée F, index 5"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASF06, S_POWER, F("Energie active soutirée F, index 6"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASF07, S_POWER, F("Energie active soutirée F, index 7"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASF08, S_POWER, F("Energie active soutirée F, index 8"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASF09, S_POWER, F("Energie active soutirée F, index 9"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASF10, S_POWER, F("Energie active soutirée F, index 10"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASD01, S_POWER, F("Energie active soutirée D, index 1"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASD01, S_POWER, F("Energie active soutirée D, index 1"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASD02, S_POWER, F("Energie active soutirée D, index 2"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASD03, S_POWER, F("Energie active soutirée D, index 3"));
+  wait(GW_DELAY);
   present( CHILD_ID_EASD04, S_POWER, F("Energie active soutirée D, index 4"));
+  wait(GW_DELAY);
   present( CHILD_ID_ERQ1, S_POWER, F("Energie réactive Q1 totale"));
+  wait(GW_DELAY);
   present( CHILD_ID_ERQ2, S_POWER, F("Energie réactive Q2 totale"));
+  wait(GW_DELAY);
   present( CHILD_ID_ERQ3, S_POWER, F("Energie réactive Q3 totale"));
+  wait(GW_DELAY);
   present( CHILD_ID_ERQ4, S_POWER, F("Energie réactive Q4 totale"));
+  wait(GW_DELAY);
+  present( CHILD_ID_START, S_POWER, F("Date démarrage module"));
 
 }
 
@@ -259,53 +329,90 @@ boolean flag_hhphc = false;
 
   // EAST
   send(msgKWH.setSensor(CHILD_ID_EAST).set(teleinfo.EAST));
-  // EAIT
-  send(msgKWH.setSensor(CHILD_ID_EAIT).set(teleinfo.EAIT));
+  wait(GW_DELAY);
   // IRMS1
   send(msgCURRENT.setSensor(CHILD_ID_IRMS1).set(teleinfo.IRMS1));
-  // IRMS2
-  send(msgCURRENT.setSensor(CHILD_ID_IRMS2).set(teleinfo.IRMS2));
-  // IRMS3
-  send(msgCURRENT.setSensor(CHILD_ID_IRMS3).set(teleinfo.IRMS3));
+  wait(GW_DELAY);
   // URMS1
   send(msgVOLTAGE.setSensor(CHILD_ID_URMS1).set(teleinfo.URMS1));
-  // URMS2
-  send(msgVOLTAGE.setSensor(CHILD_ID_URMS2).set(teleinfo.URMS2));
-  // URMS3
-  send(msgVOLTAGE.setSensor(CHILD_ID_URMS3).set(teleinfo.URMS3));
+  wait(GW_DELAY);
   // PREF
   send(msgVA.setSensor(CHILD_ID_PREF).set(teleinfo.PREF));
+  wait(GW_DELAY);
   // SINSTS
   send(msgVA.setSensor(CHILD_ID_SINSTS).set(teleinfo.SINSTS));
-  // SINSTS1
-  send(msgVA.setSensor(CHILD_ID_SINSTS1).set(teleinfo.SINSTS1));
-  // SINSTS2
-  send(msgVA.setSensor(CHILD_ID_SINSTS2).set(teleinfo.SINSTS2));
-  // SINSTS3
-  send(msgVA.setSensor(CHILD_ID_SINSTS3).set(teleinfo.SINSTS3));
+  wait(GW_DELAY);
   // SINSTI
   send(msgVA.setSensor(CHILD_ID_SINSTI).set(teleinfo.SINSTI));
+  wait(GW_DELAY);
   // EASF01..10
-  send(msgVA.setSensor(CHILD_ID_EASF01).set(teleinfo.EASF01));
-  send(msgVA.setSensor(CHILD_ID_EASF02).set(teleinfo.EASF02));
-  send(msgVA.setSensor(CHILD_ID_EASF03).set(teleinfo.EASF03));
-  send(msgVA.setSensor(CHILD_ID_EASF04).set(teleinfo.EASF04));
-  send(msgVA.setSensor(CHILD_ID_EASF05).set(teleinfo.EASF05));
-  send(msgVA.setSensor(CHILD_ID_EASF06).set(teleinfo.EASF06));
-  send(msgVA.setSensor(CHILD_ID_EASF07).set(teleinfo.EASF07));
-  send(msgVA.setSensor(CHILD_ID_EASF08).set(teleinfo.EASF08));
-  send(msgVA.setSensor(CHILD_ID_EASF09).set(teleinfo.EASF09));
-  send(msgVA.setSensor(CHILD_ID_EASF10).set(teleinfo.EASF10));
+  send(msgKWH.setSensor(CHILD_ID_EASF01).set(teleinfo.EASF01));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASF02).set(teleinfo.EASF02));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASF03).set(teleinfo.EASF03));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASF04).set(teleinfo.EASF04));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASF05).set(teleinfo.EASF05));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASF06).set(teleinfo.EASF06));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASF07).set(teleinfo.EASF07));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASF08).set(teleinfo.EASF08));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASF09).set(teleinfo.EASF09));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASF10).set(teleinfo.EASF10));
+  wait(GW_DELAY);
   // EASD01..4 
-  send(msgVA.setSensor(CHILD_ID_EASD01).set(teleinfo.EASD01));
-  send(msgVA.setSensor(CHILD_ID_EASD02).set(teleinfo.EASD02));
-  send(msgVA.setSensor(CHILD_ID_EASD03).set(teleinfo.EASD03));
-  send(msgVA.setSensor(CHILD_ID_EASD04).set(teleinfo.EASD04));
-  // ERQ1..4 
-  send(msgVA.setSensor(CHILD_ID_ERQ1).set(teleinfo.ERQ1));
-  send(msgVA.setSensor(CHILD_ID_ERQ2).set(teleinfo.ERQ2));
-  send(msgVA.setSensor(CHILD_ID_ERQ3).set(teleinfo.ERQ3));
-  send(msgVA.setSensor(CHILD_ID_ERQ4).set(teleinfo.ERQ4));
+  send(msgKWH.setSensor(CHILD_ID_EASD01).set(teleinfo.EASD01));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASD02).set(teleinfo.EASD02));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASD03).set(teleinfo.EASD03));
+  wait(GW_DELAY);
+  send(msgKWH.setSensor(CHILD_ID_EASD04).set(teleinfo.EASD04));
+    
+  if (mode_triphase) {
+	  // IRMS2
+	  send(msgCURRENT.setSensor(CHILD_ID_IRMS2).set(teleinfo.IRMS2));
+	  wait(GW_DELAY);
+	  // IRMS3
+	  send(msgCURRENT.setSensor(CHILD_ID_IRMS3).set(teleinfo.IRMS3));
+	  wait(GW_DELAY);
+	  // URMS2
+	  send(msgVOLTAGE.setSensor(CHILD_ID_URMS2).set(teleinfo.URMS2));
+	  wait(GW_DELAY);
+	  // URMS3
+	  send(msgVOLTAGE.setSensor(CHILD_ID_URMS3).set(teleinfo.URMS3));
+	  wait(GW_DELAY);
+	  // SINSTS1
+	  send(msgVA.setSensor(CHILD_ID_SINSTS1).set(teleinfo.SINSTS1));
+	  wait(GW_DELAY);
+	  // SINSTS2
+	  send(msgVA.setSensor(CHILD_ID_SINSTS2).set(teleinfo.SINSTS2));
+	  wait(GW_DELAY);
+	  // SINSTS3
+	  send(msgVA.setSensor(CHILD_ID_SINSTS3).set(teleinfo.SINSTS3));
+	  wait(GW_DELAY);
+  }
+  
+  if (mode_producteur) {
+	  // EAIT
+	  send(msgKWH.setSensor(CHILD_ID_EAIT).set(teleinfo.EAIT));
+	  wait(GW_DELAY);
+	  // ERQ1..4 
+	  send(msgKWH.setSensor(CHILD_ID_ERQ1).set(teleinfo.ERQ1));
+	  wait(GW_DELAY);
+	  send(msgKWH.setSensor(CHILD_ID_ERQ2).set(teleinfo.ERQ2));
+	  wait(GW_DELAY);
+	  send(msgKWH.setSensor(CHILD_ID_ERQ3).set(teleinfo.ERQ3));
+	  wait(GW_DELAY);
+	  send(msgKWH.setSensor(CHILD_ID_ERQ4).set(teleinfo.ERQ4));
+	  wait(GW_DELAY);
+  }
   
 }
 
@@ -316,24 +423,37 @@ boolean flag_hhphc = false;
 
   // ADSC
   send(msgTEXT.setSensor(CHILD_ID_ADSC).set(teleinfo._ADSC));
+  wait(GW_DELAY);
   // VTIC
   send(msgTEXT.setSensor(CHILD_ID_VTIC).set(teleinfo.VTIC));
+  wait(GW_DELAY);
   // NGTF
   send(msgTEXT.setSensor(CHILD_ID_NGTF).set(teleinfo.NGTF));
+  wait(GW_DELAY);
   // LTARF
   send(msgTEXT.setSensor(CHILD_ID_LTARF).set(teleinfo.LTARF));
+  wait(GW_DELAY);
   // PCOUP
   send(msgVA.setSensor(CHILD_ID_PCOUP).set(teleinfo.PCOUP));
+  wait(GW_DELAY);
   // STGE
   send(msgTEXT.setSensor(CHILD_ID_STGE).set(teleinfo.STGE));
+  wait(GW_DELAY);
   // MSG1
   send(msgTEXT.setSensor(CHILD_ID_MSG1).set(teleinfo.MSG1));
+  wait(GW_DELAY);
   // NTARF
   send(msgTEXT.setSensor(CHILD_ID_NTARF).set(teleinfo.NTARF));
+  wait(GW_DELAY);
   // NJOURF
   send(msgTEXT.setSensor(CHILD_ID_NJOURF).set(teleinfo.NJOURF));
+  wait(GW_DELAY);
   // NJOURF1
   send(msgTEXT.setSensor(CHILD_ID_NJOURF1).set(teleinfo.NJOURF1));
+  wait(GW_DELAY);
+  // START
+  send(msgVAR1.setSensor(CHILD_ID_START).set(startTime));
+  wait(GW_DELAY);  
 }
 
 

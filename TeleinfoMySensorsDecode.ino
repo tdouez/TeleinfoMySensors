@@ -97,6 +97,7 @@ void traitement_trame(char *buff)
     }
     if (strncmp("EAIT", &buff[0] , 4)==0) {
       teleinfo.EAIT = atol(&buff[5]);
+	  mode_producteur = true;
       return;
     }
     if (strncmp("IRMS", &buff[0] , 4)==0) {
@@ -106,9 +107,11 @@ void traitement_trame(char *buff)
           break;
         case '2':
           teleinfo.IRMS2 = atoi(&buff[6]);
+		  mode_triphase = true;
           break;
         case '3':
           teleinfo.IRMS3 = atoi(&buff[6]);
+		  mode_triphase = true;
           break;
       }
       return;
@@ -120,9 +123,11 @@ void traitement_trame(char *buff)
           break;
         case '2':
           teleinfo.URMS2 = atoi(&buff[6]);
+		  mode_triphase = true;
           break;
         case '3':
           teleinfo.URMS3 = atoi(&buff[6]);
+		  mode_triphase = true;
           break;
       }
       return;
@@ -136,33 +141,30 @@ void traitement_trame(char *buff)
       return;
     }
     if (strncmp("SINST", &buff[0] , 5)==0) {
-      Serial.print("5: ");
-      Serial.println(buff[5]);
-      Serial.print("6:");
-      Serial.println(buff[6]);
-      Serial.print("7:");
-      Serial.println(buff[7]);
-      Serial.print("8:");
-      Serial.println(buff[8]);
       switch(buff[5]) {
         case 'S':
           switch(buff[6]) {
             case '1':
               teleinfo.SINSTS1 = atoi(&buff[8]);
+			        mode_triphase = true;
               break;
             case '2':
               teleinfo.SINSTS2 = atoi(&buff[8]);
+			        mode_triphase = true;
               break;
             case '3':
               teleinfo.SINSTS3 = atoi(&buff[8]);
+			        mode_triphase = true;
               break;
             default:
               teleinfo.SINSTS = atoi(&buff[7]);
+              Serial.println(teleinfo.SINSTS);
               break;
           }
           break;
         case 'I':
           teleinfo.SINSTI = atoi(&buff[7]);
+		      mode_producteur = true;
           break;
       }
       return;
@@ -259,6 +261,7 @@ void traitement_trame(char *buff)
           teleinfo.ERQ4 = atol(&buff[5]);
           break;
       }
+	  mode_producteur = true;
       return;
     }
 }

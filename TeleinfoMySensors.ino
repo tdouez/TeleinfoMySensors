@@ -54,8 +54,9 @@
 //                        - Ajout EASF01..10, EASD01..04 et ERQ1..4
 //                        - Optimisation mémoire
 // 2020/08/26 - FB V1.1.2 - Ajout delais sur presentation et send, afin de soulager la gateway
-//						            - Envoi données producteur et triphasé si besoin
-//						            - Correction sur send EASF et EADS en WH au lieu du VA
+//                        - Envoi données producteur et triphasé si besoin
+//                        - Correction sur send EASF et EADS en WH au lieu du VA
+//                        - Accents retirés sur les libellés de présentation
 //--------------------------------------------------------------------
 // Enable debug prints
 //#define MY_DEBUG
@@ -238,11 +239,11 @@ void presentation()
   wait(GW_DELAY);
   present( CHILD_ID_NGTF, S_INFO, F("Nom du calendrier tarifaire"));
   wait(GW_DELAY);
-  present( CHILD_ID_LTARF, S_INFO, F("Libellé tarif"));
+  present( CHILD_ID_LTARF, S_INFO, F("Libelle tarif"));
   wait(GW_DELAY);
-  present( CHILD_ID_EAST, S_POWER, F("Energie active soutirée totale"));
+  present( CHILD_ID_EAST, S_POWER, F("Energie active soutiree totale"));
   wait(GW_DELAY);
-  present( CHILD_ID_EAIT, S_POWER, F("Energie active injectée"));
+  present( CHILD_ID_EAIT, S_POWER, F("Energie active injectee"));
   wait(GW_DELAY);
   present( CHILD_ID_IRMS1, S_MULTIMETER, F("Courant efficace, phase 1"));
   wait(GW_DELAY);
@@ -268,57 +269,57 @@ void presentation()
   wait(GW_DELAY);
   present( CHILD_ID_SINSTS3, S_POWER, F("Puissance apparente phase 3"));
   wait(GW_DELAY);
-  present( CHILD_ID_SINSTI, S_POWER, F("Puissance apparente injectée"));
+  present( CHILD_ID_SINSTI, S_POWER, F("Puissance apparente injectee"));
   wait(GW_DELAY);
   present( CHILD_ID_STGE, S_INFO, F("Registre de Statuts"));
   wait(GW_DELAY);
   present( CHILD_ID_MSG1, S_INFO, F("Message"));
   wait(GW_DELAY);
-  present( CHILD_ID_NTARF, S_INFO, F("N° index tarifaire en cours"));
+  present( CHILD_ID_NTARF, S_INFO, F("Index tarifaire en cours"));
   wait(GW_DELAY);
-  present( CHILD_ID_NJOURF, S_INFO, F("N° jour en cours"));
+  present( CHILD_ID_NJOURF, S_INFO, F("Jour en cours"));
   wait(GW_DELAY);
-  present( CHILD_ID_NJOURF1, S_INFO, F("N° prochain jour"));
+  present( CHILD_ID_NJOURF1, S_INFO, F("Prochain jour"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF01, S_POWER, F("Energie active soutirée F, index 1"));
+  present( CHILD_ID_EASF01, S_POWER, F("Energie active soutiree F, index 1"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF02, S_POWER, F("Energie active soutirée F, index 2"));
+  present( CHILD_ID_EASF02, S_POWER, F("Energie active soutiree F, index 2"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF03, S_POWER, F("Energie active soutirée F, index 3"));
+  present( CHILD_ID_EASF03, S_POWER, F("Energie active soutiree F, index 3"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF04, S_POWER, F("Energie active soutirée F, index 4"));
+  present( CHILD_ID_EASF04, S_POWER, F("Energie active soutiree F, index 4"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF05, S_POWER, F("Energie active soutirée F, index 5"));
+  present( CHILD_ID_EASF05, S_POWER, F("Energie active soutiree F, index 5"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF06, S_POWER, F("Energie active soutirée F, index 6"));
+  present( CHILD_ID_EASF06, S_POWER, F("Energie active soutiree F, index 6"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF07, S_POWER, F("Energie active soutirée F, index 7"));
+  present( CHILD_ID_EASF07, S_POWER, F("Energie active soutiree F, index 7"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF08, S_POWER, F("Energie active soutirée F, index 8"));
+  present( CHILD_ID_EASF08, S_POWER, F("Energie active soutiree F, index 8"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF09, S_POWER, F("Energie active soutirée F, index 9"));
+  present( CHILD_ID_EASF09, S_POWER, F("Energie active soutiree F, index 9"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASF10, S_POWER, F("Energie active soutirée F, index 10"));
+  present( CHILD_ID_EASF10, S_POWER, F("Energie active soutiree F, index 10"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASD01, S_POWER, F("Energie active soutirée D, index 1"));
+  present( CHILD_ID_EASD01, S_POWER, F("Energie active soutiree D, index 1"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASD01, S_POWER, F("Energie active soutirée D, index 1"));
+  present( CHILD_ID_EASD01, S_POWER, F("Energie active soutiree D, index 1"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASD02, S_POWER, F("Energie active soutirée D, index 2"));
+  present( CHILD_ID_EASD02, S_POWER, F("Energie active soutiree D, index 2"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASD03, S_POWER, F("Energie active soutirée D, index 3"));
+  present( CHILD_ID_EASD03, S_POWER, F("Energie active soutiree D, index 3"));
   wait(GW_DELAY);
-  present( CHILD_ID_EASD04, S_POWER, F("Energie active soutirée D, index 4"));
+  present( CHILD_ID_EASD04, S_POWER, F("Energie active soutiree D, index 4"));
   wait(GW_DELAY);
-  present( CHILD_ID_ERQ1, S_POWER, F("Energie réactive Q1 totale"));
+  present( CHILD_ID_ERQ1, S_POWER, F("Energie reactive Q1 totale"));
   wait(GW_DELAY);
-  present( CHILD_ID_ERQ2, S_POWER, F("Energie réactive Q2 totale"));
+  present( CHILD_ID_ERQ2, S_POWER, F("Energie reactive Q2 totale"));
   wait(GW_DELAY);
-  present( CHILD_ID_ERQ3, S_POWER, F("Energie réactive Q3 totale"));
+  present( CHILD_ID_ERQ3, S_POWER, F("Energie reactive Q3 totale"));
   wait(GW_DELAY);
-  present( CHILD_ID_ERQ4, S_POWER, F("Energie réactive Q4 totale"));
+  present( CHILD_ID_ERQ4, S_POWER, F("Energie reactive Q4 totale"));
   wait(GW_DELAY);
-  present( CHILD_ID_START, S_POWER, F("Date démarrage module"));
+  present( CHILD_ID_START, S_POWER, F("Date demarrage module"));
 
 }
 

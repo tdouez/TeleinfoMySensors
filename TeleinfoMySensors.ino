@@ -57,18 +57,51 @@
 //                        - Envoi données producteur et triphasé si besoin
 //                        - Correction sur send EASF et EADS en WH au lieu du VA
 //                        - Accents retirés sur les libellés de présentation
+// 2020/10/20 - FB V1.1.3 - Ajout options reglages NRF24L01 (puissance, débit, canal)
+//                        - Optimisation émission. n'est envoyé que les données de conso changeantes
 //--------------------------------------------------------------------
 // Enable debug prints
 //#define MY_DEBUG
 
-
+// ----------------------------------------- OPTIONS
 //#define MY_NODE_ID 2
 
-#define VERSION   "v1.1.2"
+/*
+ @def MY_RF24_PA_LEVEL
+ * @brief Default RF24 PA level. Override in sketch if needed.
+ *
+ * RF24_PA_LOW = -18dBm
+ * RF24_PA_MID = -12dBm
+ * RF24_PA_HIGH = -6dBm    -> par defaut
+ * RF24_PA_MAX = 0dBm
+ */
+#define MY_RF24_PA_LEVEL     RF24_PA_HIGH
 
-// Set LOW transmit power level as default, if you have an amplified NRF-module and
-// power your radio separately with a good regulator you can turn up PA level.
-//#define MY_RF24_PA_LEVEL RF24_PA_LOW
+/*
+ * @def MY_RF24_CHANNEL
+ * @brief RF channel for the sensor net, 0-125.
+ * Frequence: 2400 Mhz - 2525 Mhz Channels: 126
+ * http://www.mysensors.org/radio/nRF24L01Plus.pdf
+ * 0 => 2400 Mhz (RF24 channel 1)
+ * 1 => 2401 Mhz (RF24 channel 2)
+ * 76 => 2476 Mhz (RF24 channel 77)   -> par defaut
+ * 83 => 2483 Mhz (RF24 channel 84)
+ * 124 => 2524 Mhz (RF24 channel 125)
+ * 125 => 2525 Mhz (RF24 channel 126)
+ * In some countries there might be limitations, in Germany for example only the range 2400,0 - 2483,5 Mhz is allowed
+ * http://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2013_10_WLAN_2,4GHz_pdf.pdf
+ */
+//#define MY_RF24_CHANNEL   96       // !! doit être identique sur tous les éléments Mysensors incluant la Gateway
+
+/**
+ * @def MY_RF24_DATARATE
+ * @brief RF24 datarate (RF24_250KBPS for 250kbs, RF24_1MBPS for 1Mbps or RF24_2MBPS for 2Mbps).
+ */
+//#define MY_RF24_DATARATE RF24_250KBPS  // Valeur par défaut conservée. !! doit être identique sur tous les éléments Mysensors incluant la Gateway
+
+// ----------------------------------------- FIN OPTIONS
+
+#define VERSION   "v1.1.3"
 
 #define MY_BAUD_RATE 9600    // mode standard
 
@@ -86,8 +119,8 @@
 
 #include <MySensors.h>
 
-uint32_t SEND_FREQUENCY_CONSO =    5000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
-uint32_t SEND_FREQUENCY_INFO =    90000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
+uint32_t SEND_FREQUENCY_CONSO =   5000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
+uint32_t SEND_FREQUENCY_INFO =    60000; // Minimum time between send (in milliseconds). We don't want to spam the gateway.
 uint32_t lastSend_conso = 0;
 uint32_t lastSend_info = 0;
 
@@ -142,8 +175,10 @@ struct teleinfo_s {
   unsigned long ERQ3=0;
   unsigned long ERQ4=0;
 };
-teleinfo_s teleinfo;
+teleinfo_s;
 
+struct teleinfo_s teleinfo;
+struct teleinfo_s teleinfo_memo;
 
 #define CHILD_ID_ADSC     0
 #define CHILD_ID_VTIC     1
@@ -221,6 +256,7 @@ void setup()
   Serial.println(VERSION);
 
   memset(&teleinfo, 0, sizeof(teleinfo));
+  memset(&teleinfo_memo, 0, sizeof(teleinfo_memo));
 }
 
 //--------------------------------------------------------------------
@@ -326,93 +362,189 @@ void presentation()
 //--------------------------------------------------------------------
 void send_teleinfo_conso()
 {
-boolean flag_hhphc = false;
 
   // EAST
-  send(msgKWH.setSensor(CHILD_ID_EAST).set(teleinfo.EAST));
-  wait(GW_DELAY);
+  if (teleinfo.EAST =! teleinfo_memo.EAST) {
+    teleinfo_memo.EAST = teleinfo.EAST;
+    send(msgKWH.setSensor(CHILD_ID_EAST).set(teleinfo.EAST));
+    wait(GW_DELAY);
+  }
   // IRMS1
-  send(msgCURRENT.setSensor(CHILD_ID_IRMS1).set(teleinfo.IRMS1));
-  wait(GW_DELAY);
+  if (teleinfo.IRMS1 =! teleinfo_memo.IRMS1) {
+    teleinfo_memo.IRMS1 = teleinfo.IRMS1;
+    send(msgCURRENT.setSensor(CHILD_ID_IRMS1).set(teleinfo.IRMS1));
+    wait(GW_DELAY);
+  }
   // URMS1
-  send(msgVOLTAGE.setSensor(CHILD_ID_URMS1).set(teleinfo.URMS1));
-  wait(GW_DELAY);
+  if (teleinfo.URMS1 =! teleinfo_memo.URMS1) {
+    teleinfo_memo.URMS1 = teleinfo.URMS1;
+    send(msgVOLTAGE.setSensor(CHILD_ID_URMS1).set(teleinfo.URMS1));
+    wait(GW_DELAY);
+  }
   // PREF
-  send(msgVA.setSensor(CHILD_ID_PREF).set(teleinfo.PREF));
-  wait(GW_DELAY);
+  if (teleinfo.PREF =! teleinfo_memo.PREF) {
+    teleinfo_memo.PREF = teleinfo.PREF;
+    send(msgVA.setSensor(CHILD_ID_PREF).set(teleinfo.PREF));
+    wait(GW_DELAY);
+  }
   // SINSTS
-  send(msgVA.setSensor(CHILD_ID_SINSTS).set(teleinfo.SINSTS));
-  wait(GW_DELAY);
+  if (teleinfo.SINSTS =! teleinfo_memo.SINSTS) {
+    teleinfo_memo.SINSTS = teleinfo.SINSTS;
+    send(msgVA.setSensor(CHILD_ID_SINSTS).set(teleinfo.SINSTS));
+    wait(GW_DELAY);
+  }
   // SINSTI
-  send(msgVA.setSensor(CHILD_ID_SINSTI).set(teleinfo.SINSTI));
-  wait(GW_DELAY);
+  if (teleinfo.SINSTI =! teleinfo_memo.SINSTI) {
+    teleinfo_memo.SINSTI = teleinfo.SINSTI;
+    send(msgVA.setSensor(CHILD_ID_SINSTI).set(teleinfo.SINSTI));
+    wait(GW_DELAY);
+  }
   // EASF01..10
-  send(msgKWH.setSensor(CHILD_ID_EASF01).set(teleinfo.EASF01));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASF02).set(teleinfo.EASF02));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASF03).set(teleinfo.EASF03));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASF04).set(teleinfo.EASF04));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASF05).set(teleinfo.EASF05));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASF06).set(teleinfo.EASF06));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASF07).set(teleinfo.EASF07));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASF08).set(teleinfo.EASF08));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASF09).set(teleinfo.EASF09));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASF10).set(teleinfo.EASF10));
-  wait(GW_DELAY);
+  if (teleinfo.EASF01 =! teleinfo_memo.EASF01) {
+    teleinfo_memo.EASF01 = teleinfo.EASF01;
+    send(msgKWH.setSensor(CHILD_ID_EASF01).set(teleinfo.EASF01));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASF02 =! teleinfo_memo.EASF02) {
+    teleinfo_memo.EASF02 = teleinfo.EASF02;
+    send(msgKWH.setSensor(CHILD_ID_EASF02).set(teleinfo.EASF02));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASF03 =! teleinfo_memo.EASF03) {
+    teleinfo_memo.EASF03 = teleinfo.EASF03;
+    send(msgKWH.setSensor(CHILD_ID_EASF03).set(teleinfo.EASF03));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASF04 =! teleinfo_memo.EASF04) {
+    teleinfo_memo.EASF04 = teleinfo.EASF04;
+    send(msgKWH.setSensor(CHILD_ID_EASF04).set(teleinfo.EASF04));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASF05 =! teleinfo_memo.EASF05) {
+    teleinfo_memo.EASF05 = teleinfo.EASF05;
+    send(msgKWH.setSensor(CHILD_ID_EASF05).set(teleinfo.EASF05));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASF06 =! teleinfo_memo.EASF06) {
+    teleinfo_memo.EASF06 = teleinfo.EASF06;
+    send(msgKWH.setSensor(CHILD_ID_EASF06).set(teleinfo.EASF06));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASF07 =! teleinfo_memo.EASF07) {
+    teleinfo_memo.EASF07 = teleinfo.EASF07;
+    send(msgKWH.setSensor(CHILD_ID_EASF07).set(teleinfo.EASF07));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASF08 =! teleinfo_memo.EASF08) {
+    teleinfo_memo.EASF08 = teleinfo.EASF08;
+    send(msgKWH.setSensor(CHILD_ID_EASF08).set(teleinfo.EASF08));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASF09 =! teleinfo_memo.EASF09) {
+    teleinfo_memo.EASF09 = teleinfo.EASF09;
+    send(msgKWH.setSensor(CHILD_ID_EASF09).set(teleinfo.EASF09));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASF10 =! teleinfo_memo.EASF10) {
+    teleinfo_memo.EASF10 = teleinfo.EASF10;
+    send(msgKWH.setSensor(CHILD_ID_EASF10).set(teleinfo.EASF10));
+    wait(GW_DELAY);
+  }
   // EASD01..4 
-  send(msgKWH.setSensor(CHILD_ID_EASD01).set(teleinfo.EASD01));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASD02).set(teleinfo.EASD02));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASD03).set(teleinfo.EASD03));
-  wait(GW_DELAY);
-  send(msgKWH.setSensor(CHILD_ID_EASD04).set(teleinfo.EASD04));
+  if (teleinfo.EASD01 =! teleinfo_memo.EASD01) {
+    teleinfo_memo.EASD01 = teleinfo.EASD01;
+    send(msgKWH.setSensor(CHILD_ID_EASD01).set(teleinfo.EASD01));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASD02 =! teleinfo_memo.EASD02) {
+    teleinfo_memo.EASD02 = teleinfo.EASD02;
+    send(msgKWH.setSensor(CHILD_ID_EASD02).set(teleinfo.EASD02));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASD03 =! teleinfo_memo.EASD03) {
+    teleinfo_memo.EASD03 = teleinfo.EASD03;
+    send(msgKWH.setSensor(CHILD_ID_EASD03).set(teleinfo.EASD03));
+    wait(GW_DELAY);
+  }
+  if (teleinfo.EASD04 =! teleinfo_memo.EASD04) {
+    teleinfo_memo.EASD04 = teleinfo.EASD04;
+    send(msgKWH.setSensor(CHILD_ID_EASD04).set(teleinfo.EASD04));
+    wait(GW_DELAY);
+  }
     
   if (mode_triphase) {
 	  // IRMS2
-	  send(msgCURRENT.setSensor(CHILD_ID_IRMS2).set(teleinfo.IRMS2));
-	  wait(GW_DELAY);
+    if (teleinfo.IRMS2 =! teleinfo_memo.IRMS2) {
+      teleinfo_memo.IRMS2 = teleinfo.IRMS2;
+	    send(msgCURRENT.setSensor(CHILD_ID_IRMS2).set(teleinfo.IRMS2));
+	    wait(GW_DELAY);
+    }
 	  // IRMS3
-	  send(msgCURRENT.setSensor(CHILD_ID_IRMS3).set(teleinfo.IRMS3));
-	  wait(GW_DELAY);
+    if (teleinfo.IRMS3 =! teleinfo_memo.IRMS3) {
+      teleinfo_memo.IRMS3 = teleinfo.IRMS3;
+	    send(msgCURRENT.setSensor(CHILD_ID_IRMS3).set(teleinfo.IRMS3));
+	    wait(GW_DELAY);
+    }
 	  // URMS2
-	  send(msgVOLTAGE.setSensor(CHILD_ID_URMS2).set(teleinfo.URMS2));
-	  wait(GW_DELAY);
+    if (teleinfo.URMS2 =! teleinfo_memo.URMS2) {
+      teleinfo_memo.URMS2 = teleinfo.URMS2;
+	    send(msgVOLTAGE.setSensor(CHILD_ID_URMS2).set(teleinfo.URMS2));
+	    wait(GW_DELAY);
+    }
 	  // URMS3
-	  send(msgVOLTAGE.setSensor(CHILD_ID_URMS3).set(teleinfo.URMS3));
-	  wait(GW_DELAY);
+    if (teleinfo.URMS3 =! teleinfo_memo.URMS3) {
+      teleinfo_memo.URMS3 = teleinfo.URMS3;
+	    send(msgVOLTAGE.setSensor(CHILD_ID_URMS3).set(teleinfo.URMS3));
+	    wait(GW_DELAY);
+    }
 	  // SINSTS1
-	  send(msgVA.setSensor(CHILD_ID_SINSTS1).set(teleinfo.SINSTS1));
-	  wait(GW_DELAY);
+    if (teleinfo.SINSTS1 =! teleinfo_memo.SINSTS1) {
+      teleinfo_memo.SINSTS1 = teleinfo.SINSTS1;
+	    send(msgVA.setSensor(CHILD_ID_SINSTS1).set(teleinfo.SINSTS1));
+	    wait(GW_DELAY);
+    }
 	  // SINSTS2
-	  send(msgVA.setSensor(CHILD_ID_SINSTS2).set(teleinfo.SINSTS2));
-	  wait(GW_DELAY);
+    if (teleinfo.SINSTS2 =! teleinfo_memo.SINSTS2) {
+      teleinfo_memo.SINSTS2 = teleinfo.SINSTS2;
+	    send(msgVA.setSensor(CHILD_ID_SINSTS2).set(teleinfo.SINSTS2));
+	    wait(GW_DELAY);
+    }
 	  // SINSTS3
-	  send(msgVA.setSensor(CHILD_ID_SINSTS3).set(teleinfo.SINSTS3));
-	  wait(GW_DELAY);
+    if (teleinfo.SINSTS3 =! teleinfo_memo.SINSTS3) {
+      teleinfo_memo.SINSTS3 = teleinfo.SINSTS3;
+	    send(msgVA.setSensor(CHILD_ID_SINSTS3).set(teleinfo.SINSTS3));
+	    wait(GW_DELAY);
+    }
   }
   
   if (mode_producteur) {
 	  // EAIT
-	  send(msgKWH.setSensor(CHILD_ID_EAIT).set(teleinfo.EAIT));
-	  wait(GW_DELAY);
+    if (teleinfo.EAIT =! teleinfo_memo.EAIT) {
+      teleinfo_memo.EAIT = teleinfo.EAIT;
+	    send(msgKWH.setSensor(CHILD_ID_EAIT).set(teleinfo.EAIT));
+	    wait(GW_DELAY);
+    }
 	  // ERQ1..4 
-	  send(msgKWH.setSensor(CHILD_ID_ERQ1).set(teleinfo.ERQ1));
-	  wait(GW_DELAY);
-	  send(msgKWH.setSensor(CHILD_ID_ERQ2).set(teleinfo.ERQ2));
-	  wait(GW_DELAY);
-	  send(msgKWH.setSensor(CHILD_ID_ERQ3).set(teleinfo.ERQ3));
-	  wait(GW_DELAY);
-	  send(msgKWH.setSensor(CHILD_ID_ERQ4).set(teleinfo.ERQ4));
-	  wait(GW_DELAY);
+    if (teleinfo.ERQ1 =! teleinfo_memo.ERQ1) {
+      teleinfo_memo.ERQ1 = teleinfo.ERQ1;
+	    send(msgKWH.setSensor(CHILD_ID_ERQ1).set(teleinfo.ERQ1));
+	    wait(GW_DELAY);
+    }
+    if (teleinfo.ERQ2 =! teleinfo_memo.ERQ2) {
+      teleinfo_memo.ERQ2 = teleinfo.ERQ2;
+	    send(msgKWH.setSensor(CHILD_ID_ERQ2).set(teleinfo.ERQ2));
+	    wait(GW_DELAY);
+    }
+    if (teleinfo.ERQ3 =! teleinfo_memo.ERQ3) {
+      teleinfo_memo.ERQ3 = teleinfo.ERQ3;
+	    send(msgKWH.setSensor(CHILD_ID_ERQ3).set(teleinfo.ERQ3));
+	    wait(GW_DELAY);
+    }
+    if (teleinfo.ERQ4 =! teleinfo_memo.ERQ4) {
+      teleinfo_memo.ERQ4 = teleinfo.ERQ4;
+	    send(msgKWH.setSensor(CHILD_ID_ERQ4).set(teleinfo.ERQ4));
+	    wait(GW_DELAY);
+    }
   }
   
 }
@@ -420,7 +552,6 @@ boolean flag_hhphc = false;
 //--------------------------------------------------------------------
 void send_teleinfo_info()
 {
-boolean flag_hhphc = false;
 
   // ADSC
   send(msgTEXT.setSensor(CHILD_ID_ADSC).set(teleinfo._ADSC));

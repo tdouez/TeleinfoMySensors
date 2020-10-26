@@ -59,6 +59,7 @@
 //                        - Accents retirés sur les libellés de présentation
 // 2020/10/20 - FB V1.1.3 - Ajout options reglages NRF24L01 (puissance, débit, canal)
 //                        - Optimisation émission. n'est envoyé que les données de conso changeantes
+// 2020/10/26 - FB V1.1.4 - Optimisation bug fix
 //--------------------------------------------------------------------
 // Enable debug prints
 //#define MY_DEBUG
@@ -101,7 +102,7 @@
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v1.1.3"
+#define VERSION   "v1.1.4"
 
 #define MY_BAUD_RATE 9600    // mode standard
 
@@ -364,109 +365,109 @@ void send_teleinfo_conso()
 {
 
   // EAST
-  if (teleinfo.EAST =! teleinfo_memo.EAST) {
+  if (teleinfo.EAST != teleinfo_memo.EAST) {
     teleinfo_memo.EAST = teleinfo.EAST;
     send(msgKWH.setSensor(CHILD_ID_EAST).set(teleinfo.EAST));
     wait(GW_DELAY);
   }
   // IRMS1
-  if (teleinfo.IRMS1 =! teleinfo_memo.IRMS1) {
+  if (teleinfo.IRMS1 != teleinfo_memo.IRMS1) {
     teleinfo_memo.IRMS1 = teleinfo.IRMS1;
     send(msgCURRENT.setSensor(CHILD_ID_IRMS1).set(teleinfo.IRMS1));
     wait(GW_DELAY);
   }
   // URMS1
-  if (teleinfo.URMS1 =! teleinfo_memo.URMS1) {
+  if (teleinfo.URMS1 != teleinfo_memo.URMS1) {
     teleinfo_memo.URMS1 = teleinfo.URMS1;
     send(msgVOLTAGE.setSensor(CHILD_ID_URMS1).set(teleinfo.URMS1));
     wait(GW_DELAY);
   }
   // PREF
-  if (teleinfo.PREF =! teleinfo_memo.PREF) {
+  if (teleinfo.PREF != teleinfo_memo.PREF) {
     teleinfo_memo.PREF = teleinfo.PREF;
     send(msgVA.setSensor(CHILD_ID_PREF).set(teleinfo.PREF));
     wait(GW_DELAY);
   }
   // SINSTS
-  if (teleinfo.SINSTS =! teleinfo_memo.SINSTS) {
+  if (teleinfo.SINSTS != teleinfo_memo.SINSTS) {
     teleinfo_memo.SINSTS = teleinfo.SINSTS;
     send(msgVA.setSensor(CHILD_ID_SINSTS).set(teleinfo.SINSTS));
     wait(GW_DELAY);
   }
   // SINSTI
-  if (teleinfo.SINSTI =! teleinfo_memo.SINSTI) {
+  if (teleinfo.SINSTI != teleinfo_memo.SINSTI) {
     teleinfo_memo.SINSTI = teleinfo.SINSTI;
     send(msgVA.setSensor(CHILD_ID_SINSTI).set(teleinfo.SINSTI));
     wait(GW_DELAY);
   }
   // EASF01..10
-  if (teleinfo.EASF01 =! teleinfo_memo.EASF01) {
+  if (teleinfo.EASF01 != teleinfo_memo.EASF01) {
     teleinfo_memo.EASF01 = teleinfo.EASF01;
     send(msgKWH.setSensor(CHILD_ID_EASF01).set(teleinfo.EASF01));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASF02 =! teleinfo_memo.EASF02) {
+  if (teleinfo.EASF02 != teleinfo_memo.EASF02) {
     teleinfo_memo.EASF02 = teleinfo.EASF02;
     send(msgKWH.setSensor(CHILD_ID_EASF02).set(teleinfo.EASF02));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASF03 =! teleinfo_memo.EASF03) {
+  if (teleinfo.EASF03 != teleinfo_memo.EASF03) {
     teleinfo_memo.EASF03 = teleinfo.EASF03;
     send(msgKWH.setSensor(CHILD_ID_EASF03).set(teleinfo.EASF03));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASF04 =! teleinfo_memo.EASF04) {
+  if (teleinfo.EASF04 != teleinfo_memo.EASF04) {
     teleinfo_memo.EASF04 = teleinfo.EASF04;
     send(msgKWH.setSensor(CHILD_ID_EASF04).set(teleinfo.EASF04));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASF05 =! teleinfo_memo.EASF05) {
+  if (teleinfo.EASF05 != teleinfo_memo.EASF05) {
     teleinfo_memo.EASF05 = teleinfo.EASF05;
     send(msgKWH.setSensor(CHILD_ID_EASF05).set(teleinfo.EASF05));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASF06 =! teleinfo_memo.EASF06) {
+  if (teleinfo.EASF06 != teleinfo_memo.EASF06) {
     teleinfo_memo.EASF06 = teleinfo.EASF06;
     send(msgKWH.setSensor(CHILD_ID_EASF06).set(teleinfo.EASF06));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASF07 =! teleinfo_memo.EASF07) {
+  if (teleinfo.EASF07 != teleinfo_memo.EASF07) {
     teleinfo_memo.EASF07 = teleinfo.EASF07;
     send(msgKWH.setSensor(CHILD_ID_EASF07).set(teleinfo.EASF07));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASF08 =! teleinfo_memo.EASF08) {
+  if (teleinfo.EASF08 != teleinfo_memo.EASF08) {
     teleinfo_memo.EASF08 = teleinfo.EASF08;
     send(msgKWH.setSensor(CHILD_ID_EASF08).set(teleinfo.EASF08));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASF09 =! teleinfo_memo.EASF09) {
+  if (teleinfo.EASF09 != teleinfo_memo.EASF09) {
     teleinfo_memo.EASF09 = teleinfo.EASF09;
     send(msgKWH.setSensor(CHILD_ID_EASF09).set(teleinfo.EASF09));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASF10 =! teleinfo_memo.EASF10) {
+  if (teleinfo.EASF10 != teleinfo_memo.EASF10) {
     teleinfo_memo.EASF10 = teleinfo.EASF10;
     send(msgKWH.setSensor(CHILD_ID_EASF10).set(teleinfo.EASF10));
     wait(GW_DELAY);
   }
   // EASD01..4 
-  if (teleinfo.EASD01 =! teleinfo_memo.EASD01) {
+  if (teleinfo.EASD01 != teleinfo_memo.EASD01) {
     teleinfo_memo.EASD01 = teleinfo.EASD01;
     send(msgKWH.setSensor(CHILD_ID_EASD01).set(teleinfo.EASD01));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASD02 =! teleinfo_memo.EASD02) {
+  if (teleinfo.EASD02 != teleinfo_memo.EASD02) {
     teleinfo_memo.EASD02 = teleinfo.EASD02;
     send(msgKWH.setSensor(CHILD_ID_EASD02).set(teleinfo.EASD02));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASD03 =! teleinfo_memo.EASD03) {
+  if (teleinfo.EASD03 != teleinfo_memo.EASD03) {
     teleinfo_memo.EASD03 = teleinfo.EASD03;
     send(msgKWH.setSensor(CHILD_ID_EASD03).set(teleinfo.EASD03));
     wait(GW_DELAY);
   }
-  if (teleinfo.EASD04 =! teleinfo_memo.EASD04) {
+  if (teleinfo.EASD04 != teleinfo_memo.EASD04) {
     teleinfo_memo.EASD04 = teleinfo.EASD04;
     send(msgKWH.setSensor(CHILD_ID_EASD04).set(teleinfo.EASD04));
     wait(GW_DELAY);
@@ -474,43 +475,43 @@ void send_teleinfo_conso()
     
   if (mode_triphase) {
 	  // IRMS2
-    if (teleinfo.IRMS2 =! teleinfo_memo.IRMS2) {
+    if (teleinfo.IRMS2 != teleinfo_memo.IRMS2) {
       teleinfo_memo.IRMS2 = teleinfo.IRMS2;
 	    send(msgCURRENT.setSensor(CHILD_ID_IRMS2).set(teleinfo.IRMS2));
 	    wait(GW_DELAY);
     }
 	  // IRMS3
-    if (teleinfo.IRMS3 =! teleinfo_memo.IRMS3) {
+    if (teleinfo.IRMS3 != teleinfo_memo.IRMS3) {
       teleinfo_memo.IRMS3 = teleinfo.IRMS3;
 	    send(msgCURRENT.setSensor(CHILD_ID_IRMS3).set(teleinfo.IRMS3));
 	    wait(GW_DELAY);
     }
 	  // URMS2
-    if (teleinfo.URMS2 =! teleinfo_memo.URMS2) {
+    if (teleinfo.URMS2 != teleinfo_memo.URMS2) {
       teleinfo_memo.URMS2 = teleinfo.URMS2;
 	    send(msgVOLTAGE.setSensor(CHILD_ID_URMS2).set(teleinfo.URMS2));
 	    wait(GW_DELAY);
     }
 	  // URMS3
-    if (teleinfo.URMS3 =! teleinfo_memo.URMS3) {
+    if (teleinfo.URMS3 != teleinfo_memo.URMS3) {
       teleinfo_memo.URMS3 = teleinfo.URMS3;
 	    send(msgVOLTAGE.setSensor(CHILD_ID_URMS3).set(teleinfo.URMS3));
 	    wait(GW_DELAY);
     }
 	  // SINSTS1
-    if (teleinfo.SINSTS1 =! teleinfo_memo.SINSTS1) {
+    if (teleinfo.SINSTS1 != teleinfo_memo.SINSTS1) {
       teleinfo_memo.SINSTS1 = teleinfo.SINSTS1;
 	    send(msgVA.setSensor(CHILD_ID_SINSTS1).set(teleinfo.SINSTS1));
 	    wait(GW_DELAY);
     }
 	  // SINSTS2
-    if (teleinfo.SINSTS2 =! teleinfo_memo.SINSTS2) {
+    if (teleinfo.SINSTS2 != teleinfo_memo.SINSTS2) {
       teleinfo_memo.SINSTS2 = teleinfo.SINSTS2;
 	    send(msgVA.setSensor(CHILD_ID_SINSTS2).set(teleinfo.SINSTS2));
 	    wait(GW_DELAY);
     }
 	  // SINSTS3
-    if (teleinfo.SINSTS3 =! teleinfo_memo.SINSTS3) {
+    if (teleinfo.SINSTS3 != teleinfo_memo.SINSTS3) {
       teleinfo_memo.SINSTS3 = teleinfo.SINSTS3;
 	    send(msgVA.setSensor(CHILD_ID_SINSTS3).set(teleinfo.SINSTS3));
 	    wait(GW_DELAY);
@@ -519,28 +520,28 @@ void send_teleinfo_conso()
   
   if (mode_producteur) {
 	  // EAIT
-    if (teleinfo.EAIT =! teleinfo_memo.EAIT) {
+    if (teleinfo.EAIT != teleinfo_memo.EAIT) {
       teleinfo_memo.EAIT = teleinfo.EAIT;
 	    send(msgKWH.setSensor(CHILD_ID_EAIT).set(teleinfo.EAIT));
 	    wait(GW_DELAY);
     }
 	  // ERQ1..4 
-    if (teleinfo.ERQ1 =! teleinfo_memo.ERQ1) {
+    if (teleinfo.ERQ1 != teleinfo_memo.ERQ1) {
       teleinfo_memo.ERQ1 = teleinfo.ERQ1;
 	    send(msgKWH.setSensor(CHILD_ID_ERQ1).set(teleinfo.ERQ1));
 	    wait(GW_DELAY);
     }
-    if (teleinfo.ERQ2 =! teleinfo_memo.ERQ2) {
+    if (teleinfo.ERQ2 != teleinfo_memo.ERQ2) {
       teleinfo_memo.ERQ2 = teleinfo.ERQ2;
 	    send(msgKWH.setSensor(CHILD_ID_ERQ2).set(teleinfo.ERQ2));
 	    wait(GW_DELAY);
     }
-    if (teleinfo.ERQ3 =! teleinfo_memo.ERQ3) {
+    if (teleinfo.ERQ3 != teleinfo_memo.ERQ3) {
       teleinfo_memo.ERQ3 = teleinfo.ERQ3;
 	    send(msgKWH.setSensor(CHILD_ID_ERQ3).set(teleinfo.ERQ3));
 	    wait(GW_DELAY);
     }
-    if (teleinfo.ERQ4 =! teleinfo_memo.ERQ4) {
+    if (teleinfo.ERQ4 != teleinfo_memo.ERQ4) {
       teleinfo_memo.ERQ4 = teleinfo.ERQ4;
 	    send(msgKWH.setSensor(CHILD_ID_ERQ4).set(teleinfo.ERQ4));
 	    wait(GW_DELAY);

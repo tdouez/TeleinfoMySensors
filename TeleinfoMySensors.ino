@@ -111,9 +111,9 @@
 // Enable and select radio type attached
 #define MY_RADIO_RF24
  
-#define MY_DEFAULT_ERR_LED_PIN 4  // Error led pin
-#define MY_DEFAULT_RX_LED_PIN  3  // Receive led pin, on board LED
-#define MY_DEFAULT_TX_LED_PIN  3  // 
+#define MY_DEFAULT_ERR_LED_PIN 3  // Error led pin
+#define MY_DEFAULT_RX_LED_PIN  4  // Receive led pin, on board LED
+#define MY_DEFAULT_TX_LED_PIN  4  // 
 
 #define GW_DELAY	1000 // ms
 

@@ -196,9 +196,6 @@ void traitement_trame(char *buff)
     }
     if (strncmp("EASF", &buff[0] , 4)==0) {
       switch(buff[5]) {
-        case '0':
-          teleinfo.EASF10 = atol(&buff[7]);
-          break;
         case '1':
           teleinfo.EASF01 = atol(&buff[7]);
           break;
@@ -207,24 +204,6 @@ void traitement_trame(char *buff)
           break;
         case '3':
           teleinfo.EASF03 = atol(&buff[7]);
-          break;
-        case '4':
-          teleinfo.EASF04 = atol(&buff[7]);
-          break;
-        case '5':
-          teleinfo.EASF05 = atol(&buff[7]);
-          break;
-        case '6':
-          teleinfo.EASF06 = atol(&buff[7]);
-          break;
-        case '7':
-          teleinfo.EASF07 = atol(&buff[7]);
-          break;
-        case '8':
-          teleinfo.EASF08 = atol(&buff[7]);
-          break;
-        case '9':
-          teleinfo.EASF09 = atol(&buff[7]);
           break;
       }
       return;
@@ -239,9 +218,6 @@ void traitement_trame(char *buff)
           break;
         case '3':
           teleinfo.EASD03 = atol(&buff[7]);
-          break;
-        case '4':
-          teleinfo.EASD04 = atol(&buff[7]);
           break;
       }
       return;

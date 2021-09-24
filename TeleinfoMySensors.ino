@@ -54,8 +54,9 @@
 //#define MY_DEBUG
 
 //#define MY_NODE_ID 2
+#define MY_REPEATER_FEATURE
 
-#define VERSION   "v1.0.6"
+#define VERSION   "v1.0.7"
 
 // Set LOW transmit power level as default, if you have an amplified NRF-module and
 // power your radio separately with a good regulator you can turn up PA level.

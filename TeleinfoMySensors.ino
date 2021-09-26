@@ -53,7 +53,7 @@
 // Enable debug prints
 //#define MY_DEBUG
 
-//#define MY_NODE_ID 2
+#define MY_NODE_ID 3
 #define MY_REPEATER_FEATURE
 
 #define VERSION   "v1.0.7"
@@ -143,8 +143,11 @@ MyMessage msgVAR3_PTEC( 0, V_VAR3 );
 MyMessage msgVAR4_HHPHC( 0, V_VAR4 );
 MyMessage msgVAR5_DEMAIN( 0, V_VAR5 );
 MyMessage msgCURRENT( 0, V_CURRENT );
-MyMessage msgWATT( 0, V_WATT );
+MyMessage msgVA( 0, V_VA );
 MyMessage msgKWH( 0, V_KWH );
+MyMessage msgPrefix( 0, V_UNIT_PREFIX );
+
+
 
 //--------------------------------------------------------------------
 void setup()
@@ -165,6 +168,19 @@ void setup()
   Serial.println(F("  _| \\_,_| _|_|_| \\___| \\___|   ___/ _| \\___| \\_,_| \\___|"));
   Serial.print(F("                                             "));
   Serial.println(VERSION);
+
+  send(msgPrefix.setSensor(CHILD_ID_BASE).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EJP_HN).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EJP_HPM).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_PEJP).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_HCHC).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_HCHP).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HC_JB).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HP_JB).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HC_JW).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HP_JW).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HC_JR).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HP_JR).set("Wh"));
 /*
   digitalWrite(LED_SEND, LOW);
   delay(200);
@@ -261,7 +277,7 @@ boolean flag_hhphc = false;
   send(msgCURRENT.setSensor(CHILD_ID_IINST).set(teleinfo.IINST));
 
   // PAPP
-  send(msgWATT.setSensor(CHILD_ID_PAPP).set(teleinfo.PAPP));
+  send(msgVA.setSensor(CHILD_ID_PAPP).set(teleinfo.PAPP));
 
   // ADPS
   send(msgCURRENT.setSensor(CHILD_ID_ADPS).set(teleinfo.ADPS));

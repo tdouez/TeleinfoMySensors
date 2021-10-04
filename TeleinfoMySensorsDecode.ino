@@ -73,8 +73,6 @@ static int led_state;
 // Traitement trame teleinfo ------------------------------------------
 void traitement_trame(char *buff)
 {
-
-    
     if (strncmp("ADCO ", &buff[1] , 5)==0) {
       strncpy(teleinfo.ADCO, &buff[6], 12);
       teleinfo.ADCO[12] = '\0';
@@ -190,7 +188,6 @@ char in;
   
   if (Serial.available()>0) {
     in = (char)Serial.read() & 127;
-        
     if (in == 0x0A) bufflen=0;
   
     buffin[bufflen] = in;
@@ -200,11 +197,10 @@ char in;
     
     if (in == 0x0D && bufflen > 5)   { // fin trame ------
       //change_etat_led_teleinfo();
-      //Serial.println(buffin);
+      // Serial.println(buffin);
       if (ckecksum(buffin,bufflen-1) == buffin[bufflen-2]) { // Test du checksum
         traitement_trame(buffin);
-      } 
-//      else {
+      }
 //        digitalWrite(LED_SEND, LOW);
 //        delay(100);
 //        digitalWrite(LED_SEND, HIGH);

@@ -53,9 +53,10 @@
 // Enable debug prints
 //#define MY_DEBUG
 
-//#define MY_NODE_ID 2
+#define MY_NODE_ID 3
+#define MY_REPEATER_FEATURE
 
-#define VERSION   "v1.0.6"
+#define VERSION   "v1.0.7"
 
 // Set LOW transmit power level as default, if you have an amplified NRF-module and
 // power your radio separately with a good regulator you can turn up PA level.
@@ -132,6 +133,8 @@ teleinfo_s teleinfo;
 #define CHILD_ID_ADPS      19
 #define CHILD_ID_IMAX      20
 #define CHILD_ID_HHPHC     21
+// #define CHILD_ID_DEBUG     22
+
 
 
 MyMessage msgVAR1_ADCO( 0, V_VAR1 );
@@ -140,8 +143,10 @@ MyMessage msgVAR3_PTEC( 0, V_VAR3 );
 MyMessage msgVAR4_HHPHC( 0, V_VAR4 );
 MyMessage msgVAR5_DEMAIN( 0, V_VAR5 );
 MyMessage msgCURRENT( 0, V_CURRENT );
-MyMessage msgWATT( 0, V_WATT );
+MyMessage msgVA( 0, V_VA );
 MyMessage msgKWH( 0, V_KWH );
+MyMessage msgPrefix( 0, V_UNIT_PREFIX );
+
 
 
 //--------------------------------------------------------------------
@@ -163,6 +168,19 @@ void setup()
   Serial.println(F("  _| \\_,_| _|_|_| \\___| \\___|   ___/ _| \\___| \\_,_| \\___|"));
   Serial.print(F("                                             "));
   Serial.println(VERSION);
+
+  send(msgPrefix.setSensor(CHILD_ID_BASE).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EJP_HN).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EJP_HPM).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_PEJP).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_HCHC).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_HCHP).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HC_JB).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HP_JB).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HC_JW).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HP_JW).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HC_JR).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_BBR_HP_JR).set("Wh"));
 /*
   digitalWrite(LED_SEND, LOW);
   delay(200);
@@ -181,29 +199,28 @@ void presentation()
   sendSketchInfo("Teleinfo", VERSION);
 
   // Register this device as power sensor
-  present( CHILD_ID_ADCO, S_POWER );
-  present( CHILD_ID_OPTARIF, S_POWER );
-  present( CHILD_ID_ISOUSC, S_POWER );
-  present( CHILD_ID_BASE, S_POWER );
-  present( CHILD_ID_HCHC, S_POWER );
-  present( CHILD_ID_HCHP, S_POWER );
-  present( CHILD_ID_EJP_HN, S_POWER );
-  present( CHILD_ID_EJP_HPM, S_POWER );
-  present( CHILD_ID_BBR_HC_JB, S_POWER );
-  present( CHILD_ID_BBR_HP_JB, S_POWER );
-  present( CHILD_ID_BBR_HC_JW, S_POWER );
-  present( CHILD_ID_BBR_HP_JW, S_POWER );
-  present( CHILD_ID_BBR_HC_JR, S_POWER );
-  present( CHILD_ID_BBR_HP_JR, S_POWER );
-  present( CHILD_ID_PEJP, S_POWER );
-  present( CHILD_ID_PTEC, S_POWER );
-  present( CHILD_ID_DEMAIN, S_POWER );
-  present( CHILD_ID_IINST, S_POWER );
-  present( CHILD_ID_ADPS, S_POWER );
-  present( CHILD_ID_IMAX, S_POWER );
-  present( CHILD_ID_PAPP, S_POWER );
-  present( CHILD_ID_HHPHC, S_POWER );
-
+  present( CHILD_ID_ADCO, S_CUSTOM, "ADCO" );
+  present( CHILD_ID_OPTARIF, S_CUSTOM, "OPTARIF" );
+  present( CHILD_ID_ISOUSC, S_MULTIMETER, "ISOUSC" );
+  present( CHILD_ID_BASE, S_POWER, "BASE" );
+  present( CHILD_ID_HCHC, S_POWER, "HCHC" );
+  present( CHILD_ID_HCHP, S_POWER, "HCHP" );
+  present( CHILD_ID_EJP_HN, S_POWER, "EJP_HN" );
+  present( CHILD_ID_EJP_HPM, S_POWER, "EJP_HPM" );
+  present( CHILD_ID_BBR_HC_JB, S_POWER, "BBR_HC_JB" );
+  present( CHILD_ID_BBR_HP_JB, S_POWER, "BBR_HP_JB" );
+  present( CHILD_ID_BBR_HC_JW, S_POWER, "BBR_HC_JW" );
+  present( CHILD_ID_BBR_HP_JW, S_POWER, "BBR_HP_JW" );
+  present( CHILD_ID_BBR_HC_JR, S_POWER, "BBR_HC_JR" );
+  present( CHILD_ID_BBR_HP_JR, S_POWER, "BBR_HP_JR" );
+  present( CHILD_ID_PEJP, S_CUSTOM, "PEJP" );
+  present( CHILD_ID_PTEC, S_POWER, "PTEC" );
+  present( CHILD_ID_DEMAIN, S_CUSTOM, "DEMAIN" );
+  present( CHILD_ID_IINST, S_MULTIMETER, "IINST" );
+  present( CHILD_ID_ADPS, S_MULTIMETER, "ADPS" );
+  present( CHILD_ID_IMAX, S_MULTIMETER, "IMAX" );
+  present( CHILD_ID_PAPP, S_POWER, "PAPP" );
+  present( CHILD_ID_HHPHC, S_CUSTOM, "HHPHC" );
 }
 
 //--------------------------------------------------------------------
@@ -260,7 +277,7 @@ boolean flag_hhphc = false;
   send(msgCURRENT.setSensor(CHILD_ID_IINST).set(teleinfo.IINST));
 
   // PAPP
-  send(msgWATT.setSensor(CHILD_ID_PAPP).set(teleinfo.PAPP));
+  send(msgVA.setSensor(CHILD_ID_PAPP).set(teleinfo.PAPP));
 
   // ADPS
   send(msgCURRENT.setSensor(CHILD_ID_ADPS).set(teleinfo.ADPS));

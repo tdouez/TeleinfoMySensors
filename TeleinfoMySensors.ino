@@ -62,12 +62,16 @@
 // 2020/10/26 - FB V1.1.4 - Optimisation bug fix
 // 2020/11/12 - FB V1.1.5 - Ajout valeurs min, max sur INSTS..4
 //                        - Suppression données à partir de EAS..4, profondeur inutile
+// 2021/10/05 - FB V1.1.6 - Ajout prefixes et corrections sur type de compteur
 //--------------------------------------------------------------------
 // Enable debug prints
 #define MY_DEBUG
 
 // ----------------------------------------- OPTIONS
 //#define MY_NODE_ID 2
+
+// FOTA
+//#define MY_OTA_FIRMWARE_FEATURE 
 
 /*
  @def MY_RF24_PA_LEVEL
@@ -104,7 +108,7 @@
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v1.1.5"
+#define VERSION   "v1.1.6"
 
 #define MY_BAUD_RATE 9600    // mode standard
 
@@ -213,7 +217,7 @@ MyMessage msgWATT( 0, V_WATT ); // S_POWER
 MyMessage msgKWH( 0, V_KWH );   // S_POWER
 MyMessage msgVA( 0, V_VA );     // S_POWER
 MyMessage msgVAR1( 0, V_VAR1 ); // Custom value
-
+MyMessage msgPrefix( 0, V_UNIT_PREFIX );
 
 //-----------------------------------------------------------------------
 // This is called when a new time value was received
@@ -251,6 +255,32 @@ void setup()
   Serial.println("SETUP");
   memset(&teleinfo, 0, sizeof(teleinfo));
   memset(&teleinfo_memo, 0, sizeof(teleinfo_memo));
+  
+  // Send prefix
+  send(msgPrefix.setSensor(CHILD_ID_EAST).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EAIT).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_IRMS1).set("A"));
+  send(msgPrefix.setSensor(CHILD_ID_IRMS2).set("A"));
+  send(msgPrefix.setSensor(CHILD_ID_IRMS3).set("A"));
+  send(msgPrefix.setSensor(CHILD_ID_URMS1).set("V"));
+  send(msgPrefix.setSensor(CHILD_ID_URMS2).set("V"));
+  send(msgPrefix.setSensor(CHILD_ID_URMS3).set("V"));
+  send(msgPrefix.setSensor(CHILD_ID_PREF).set("kVA"));
+  send(msgPrefix.setSensor(CHILD_ID_PCOUP).set("kVA"));
+  send(msgPrefix.setSensor(CHILD_ID_SINSTS).set("VA"));
+  send(msgPrefix.setSensor(CHILD_ID_SINSTS1).set("VA"));
+  send(msgPrefix.setSensor(CHILD_ID_SINSTS2).set("VA"));
+  send(msgPrefix.setSensor(CHILD_ID_SINSTS3).set("VA"));
+  send(msgPrefix.setSensor(CHILD_ID_SINSTI).set("VA"));
+  send(msgPrefix.setSensor(CHILD_ID_EASF01).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EASF02).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EASF03).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EASD01).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EASD02).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_EASD03).set("Wh"));
+  send(msgPrefix.setSensor(CHILD_ID_ERQ1).set("VArh"));
+  send(msgPrefix.setSensor(CHILD_ID_ERQ2).set("VArh"));
+  send(msgPrefix.setSensor(CHILD_ID_ERQ3).set("VArh"));
 }
 
 //--------------------------------------------------------------------
@@ -296,7 +326,7 @@ void presentation()
   present( CHILD_ID_ERQ1, S_POWER, F("Energie reactive Q1 totale"));
   present( CHILD_ID_ERQ2, S_POWER, F("Energie reactive Q2 totale"));
   present( CHILD_ID_ERQ3, S_POWER, F("Energie reactive Q3 totale"));
-  present( CHILD_ID_START, S_POWER, F("Date demarrage module"));
+  present( CHILD_ID_START, S_INFO, F("Date demarrage module"));
 
 }
 

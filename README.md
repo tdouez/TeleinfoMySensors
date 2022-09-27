@@ -1,4 +1,4 @@
-# TeleinfoMySensors v2.0.0
+# TeleinfoMySensors v2.0.1
 
 Interface Téléinfo pour compteur Linky avec MySensors - version compatible mode standard et historique
 

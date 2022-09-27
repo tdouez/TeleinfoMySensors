@@ -65,6 +65,7 @@
 // 2021/10/05 - FB V1.1.6 - Ajout prefixes et corrections sur type de compteur
 // 2022/06/10 - FB V2.0.0 - Utilisation librairie universelle LibTeleinfo modifiée (pas d'enregistrement, pas assez de RAM sur l'ATmega328 pour avoir une solution stable en TIC full)
 //                        - Compatible mode historique et mode standard; détermination automatique au démarrage
+// 2022/09/25 - FB V2.0.1 - Correction sur détection TIC standard
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
@@ -115,7 +116,7 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.0"
+#define VERSION   "v2.0.1"
 
 #define DELAY_PREFIX  50
 #define DELAY_SEND    50
@@ -575,37 +576,7 @@ void send_teleinfo(char *etiq, char *val)
       send_teleinfo_standard(etiq, val);
    }
 }
-/*
-// ---------------------------------------------------------------- 
-// send_teleinfo
-//    Envoi trame de teleinfo
-// ---------------------------------------------------------------- 
-void send_teleinfo(ValueList *vl_tic, boolean all_tic)
-{
-  
-  if (vl_tic && flag_tic) {
 
-    // parcours liste chainée vl_tic
-    while (vl_tic->next) {
-      vl_tic = vl_tic->next;
-      // uniquement sur les nouvelles valeurs ou celles modifiées ou toutes
-      if ( all_tic || ( vl_tic->flags & (TINFO_FLAGS_UPDATED | TINFO_FLAGS_ADDED) )) {
-        if (vl_tic->name && strlen(vl_tic->name) > 2 && vl_tic->value && strlen(vl_tic->value) > 1) {
-          if (mode_tic == TINFO_MODE_HISTORIQUE) {
-            send_teleinfo_historique(vl_tic->name, vl_tic->value);
-          }
-          else {
-            send_teleinfo_standard(vl_tic->name, vl_tic->value);
-          }
-          //wdt_reset();
-          wait(DELAY_SEND);
-        }
-      }
-    }
-    flag_tic = false;
-  }
-}
-*/
 // ---------------------------------------------------------------- 
 // init_speed_TIC
 // ---------------------------------------------------------------- 
@@ -613,26 +584,36 @@ _Mode_e init_speed_TIC()
 {
 boolean flag_timeout = false;
 boolean flag_found_speed = false;
-boolean flag_debut_trame = false;
-boolean flag_milieu_trame = false;
-boolean flag_fin_trame = false;
 uint32_t currentTime = millis();
+unsigned step = 0;
 _Mode_e mode;
 
   digitalWrite(MY_DEFAULT_ERR_LED_PIN, LOW);
   digitalWrite(MY_DEFAULT_RX_LED_PIN, LOW);
   
   // Test en mode historique
-  // Recherche des éléments de début, milieu et fin de trame 
+  // Recherche des éléments de début, milieu et fin de trame (0x0A, 0x20, 0x20, 0x0D)
   Serial.begin(1200); // mode historique
   while (!flag_timeout && !flag_found_speed) {
     if (Serial.available()>0) {
       char in = (char)Serial.read() & 127;  // seulement sur 7 bits
-      if (in == 0x0A) flag_debut_trame = true; // début trame
-      if (in == 0x20) flag_milieu_trame = true; // milieu trame
-      if (in == 0x0D) flag_fin_trame = true; // fin trame
-
-      if (flag_debut_trame && flag_milieu_trame && flag_fin_trame) flag_found_speed = true;
+      // début trame
+        if (in == 0x0A) {
+        step = 1;
+      }
+      // premier milieu de trame
+        if (step == 1 && in == 0x20) {
+        step = 2;
+      }
+      // deuxième milieu de trame
+        if (step == 2 && in == 0x20) {
+        step = 3;
+      }
+      // fin trame
+        if (step == 3 && in == 0x0D) {
+        flag_found_speed = true;
+        step = 0;
+      }
     }
     if (currentTime + 10000 <  millis()) flag_timeout = true; // 10s de timeout
   }
@@ -725,8 +706,6 @@ void before()
   Serial.println(VERSION);
 
   tinfo.init(mode_tic);
-  //tinfo.attachUpdatedFrame(UpdatedFrame);
-  //affiche_freeMemory();
 }
 
 //--------------------------------------------------------------------
@@ -994,20 +973,5 @@ void loop()
   }
 
   if (Serial.available()) tinfo.process(Serial.read());
-/*
-  // envoyer l'ensemble des données tous les SEND_FREQUENCY_FULL ms
-  if (currentTime - lastTime_full > SEND_FREQUENCY_FULL) {
-    Serial.println(F("SEND_FREQUENCY_FULL"));
-    flag_full_tic = true;
-    flag_tic = true;
-    lastTime_full = currentTime;
-  }
-
-  // envoyer les données tous les SEND_FREQUENCY_TIC ms
-  if (currentTime - lastTime_tic > SEND_FREQUENCY_TIC) {
-    Serial.println(F("SEND_FREQUENCY_TIC"));
-    flag_tic = true;
-    lastTime_tic = currentTime;
-  }*/
 
 }

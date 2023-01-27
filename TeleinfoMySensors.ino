@@ -66,6 +66,7 @@
 // 2022/06/10 - FB V2.0.0 - Utilisation librairie universelle LibTeleinfo modifiée (pas d'enregistrement, pas assez de RAM sur l'ATmega328 pour avoir une solution stable en TIC full)
 //                        - Compatible mode historique et mode standard; détermination automatique au démarrage
 // 2022/09/25 - FB V2.0.1 - Correction sur détection TIC standard
+// 2023/01/23 - FB V2.0.2 - Correction sur l'envoi des prefixes des chil_id_smax. Merci à Laurent B.
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
@@ -116,7 +117,7 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.1"
+#define VERSION   "v2.0.2"
 
 #define DELAY_PREFIX  50
 #define DELAY_SEND    50
@@ -126,7 +127,7 @@ int8_t myNodeId;
 
 // Enable and select radio type attached
 #define MY_RADIO_RF24
- 
+
 #define MY_DEFAULT_ERR_LED_PIN 3  // Error led pin
 #define MY_DEFAULT_RX_LED_PIN  4  // Receive led pin, on board LED
 #define MY_DEFAULT_TX_LED_PIN  4  // 
@@ -135,7 +136,6 @@ int8_t myNodeId;
 #define SWITCH_2  6
 #define SWITCH_3  7
 #define SWITCH_4  8
-
 
 #include <MySensors.h>
 #include "LibTeleinfoLite.h"
@@ -948,14 +948,14 @@ void loop()
       send(msgPrefix.setSensor(CHILD_ID_SMAXSN2).set(char_VA));
       wait(DELAY_PREFIX);
       send(msgPrefix.setSensor(CHILD_ID_SMAXSN3).set(char_VA));
-      send(msgPrefix.setSensor(CHILD_ID_SMAXSN-1).set(char_VA));
-      send(msgPrefix.setSensor(CHILD_ID_SMAXSN1-1).set(char_VA));
-      send(msgPrefix.setSensor(CHILD_ID_SMAXSN2-1).set(char_VA));
-      send(msgPrefix.setSensor(CHILD_ID_SMAXSN3-1).set(char_VA));
+      send(msgPrefix.setSensor(CHILD_ID_SMAXSN_1).set(char_VA));
+      send(msgPrefix.setSensor(CHILD_ID_SMAXSN1_1).set(char_VA));
+      send(msgPrefix.setSensor(CHILD_ID_SMAXSN2_1).set(char_VA));
+      send(msgPrefix.setSensor(CHILD_ID_SMAXSN3_1).set(char_VA));
       wait(DELAY_PREFIX);
       send(msgPrefix.setSensor(CHILD_ID_SINSTI).set(char_VA));
       send(msgPrefix.setSensor(CHILD_ID_SMAXIN).set(char_VA));
-      send(msgPrefix.setSensor(CHILD_ID_SMAXIN-1).set(char_VA));
+      send(msgPrefix.setSensor(CHILD_ID_SMAXIN_1).set(char_VA));
       send(msgPrefix.setSensor(CHILD_ID_CCASN).set(char_WATT));
       send(msgPrefix.setSensor(CHILD_ID_CCASN-1).set(char_WATT));
       wait(DELAY_PREFIX);

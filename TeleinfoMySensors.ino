@@ -67,6 +67,7 @@
 //                        - Compatible mode historique et mode standard; détermination automatique au démarrage
 // 2022/09/25 - FB V2.0.1 - Correction sur détection TIC standard
 // 2023/01/23 - FB V2.0.2 - Correction sur l'envoi des prefixes des chil_id_smax. Merci à Laurent B.
+// 2023/02/02 - FB V2.0.3 - Mise à jour librairie LibTeleinfo v1.1.5 avec derniers correctifs https://github.com/hallard/LibTeleinfo/releases
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
@@ -117,7 +118,7 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.2"
+#define VERSION   "v2.0.3"
 
 #define DELAY_PREFIX  50
 #define DELAY_SEND    50

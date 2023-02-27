@@ -68,6 +68,7 @@
 // 2022/09/25 - FB V2.0.1 - Correction sur détection TIC standard
 // 2023/01/23 - FB V2.0.2 - Correction sur l'envoi des prefixes des chil_id_smax. Merci à Laurent B.
 // 2023/02/02 - FB V2.0.3 - Mise à jour librairie LibTeleinfo v1.1.5 avec derniers correctifs https://github.com/hallard/LibTeleinfo/releases
+// 2023/02/27 - FB V2.0.4 - Correction sur l'envoi des préfixes CHILD_ID_CCA*
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
@@ -118,7 +119,7 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.3"
+#define VERSION   "v2.0.4"
 
 #define DELAY_PREFIX  50
 #define DELAY_SEND    50
@@ -958,10 +959,10 @@ void loop()
       send(msgPrefix.setSensor(CHILD_ID_SMAXIN).set(char_VA));
       send(msgPrefix.setSensor(CHILD_ID_SMAXIN_1).set(char_VA));
       send(msgPrefix.setSensor(CHILD_ID_CCASN).set(char_WATT));
-      send(msgPrefix.setSensor(CHILD_ID_CCASN-1).set(char_WATT));
+      send(msgPrefix.setSensor(CHILD_ID_CCASN_1).set(char_WATT));
       wait(DELAY_PREFIX);
       send(msgPrefix.setSensor(CHILD_ID_CCAIN).set(char_WATT));
-      send(msgPrefix.setSensor(CHILD_ID_CCAIN-1).set(char_WATT));
+      send(msgPrefix.setSensor(CHILD_ID_CCAIN_1).set(char_WATT));
       send(msgPrefix.setSensor(CHILD_ID_UMOY1).set(char_VOLT));
       send(msgPrefix.setSensor(CHILD_ID_UMOY2).set(char_VOLT));
       send(msgPrefix.setSensor(CHILD_ID_UMOY3).set(char_VOLT));

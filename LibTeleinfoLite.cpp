@@ -102,11 +102,13 @@ Input   : callback function
 Output  : -
 Comments: -
 ====================================================================== */
+ /* FB ----------------------------
 void TInfo::attachADPS(void (*fn_ADPS)(uint8_t phase))
 {
   // indicate the user callback
   _fn_ADPS = fn_ADPS;
 }
+*/
 
 /* ======================================================================
 Function: attachNewData
@@ -241,11 +243,14 @@ ValueList * TInfo::valueAdd(char * name, char * value, uint8_t checksum, uint8_t
       // Create pointer on the new node
       ValueList *newNode = NULL;
       ValueList *parNode = NULL ;
+      /* FB
       uint32_t ts = 0;
+      
 
       if (horodate && *horodate) {
         ts = horodate2Timestamp(horodate);
       }
+      */
 
       // Loop thru the node
       while (me->next) {
@@ -257,9 +262,11 @@ ValueList * TInfo::valueAdd(char * name, char * value, uint8_t checksum, uint8_t
 
         // Check if we already have this LABEL (same name AND same size)
         if (lgname==strlen(me->name) && strcmp(me->name, name)==0) {
+          /*FB
           if (ts) {
             me->ts = ts;
           }
+          */
           // Already got also this value  return US
           if (lgvalue==strlen(me->value) && strcmp(me->value, value) == 0) {
             *flags |= TINFO_FLAGS_EXIST;
@@ -326,7 +333,9 @@ ValueList * TInfo::valueAdd(char * name, char * value, uint8_t checksum, uint8_t
       memcpy(newNode->name , name  , lgname );
       memcpy(newNode->value, value , lgvalue );
       // Add timestamp
+      /* FB
       newNode->ts = ts;
+      */
 
       // So we just created this node but was it new
       // or was matter of text size ?
@@ -712,6 +721,7 @@ Input   : pdate : pointer to string containing the date SAAMMJJhhmmss
 Output  : unix format timestamp
 Comments:
 ====================================================================== */
+/* FB
 uint32_t TInfo::horodate2Timestamp( char * pdate)
 {
   struct tm tm;
@@ -742,6 +752,7 @@ uint32_t TInfo::horodate2Timestamp( char * pdate)
 
   return (uint32_t) ts;
 }
+*/
 
 /* ======================================================================
 Function: customLabel
@@ -949,6 +960,8 @@ _State_e TInfo::process(char c)
 {
    // be sure 7 bits only
    c &= 0x7F;
+
+   Serial.print(c);
 
   // What we received ?
   switch (c)  {

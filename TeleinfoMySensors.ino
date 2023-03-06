@@ -69,12 +69,13 @@
 // 2023/01/23 - FB V2.0.2 - Correction sur l'envoi des prefixes des chil_id_smax. Merci à Laurent B.
 // 2023/02/02 - FB V2.0.3 - Mise à jour librairie LibTeleinfo v1.1.5 avec derniers correctifs https://github.com/hallard/LibTeleinfo/releases
 // 2023/02/27 - FB V2.0.4 - Correction sur l'envoi des préfixes CHILD_ID_CCA*
+// 2023/03/03 = FB V2.0.5 - Optimisation mémoire
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
 #define MY_DEBUG
 
-//#define CARTE_SWITCH /* A décommenter si utilisation de PCB doté de micro-switchs */
+#define CARTE_SWITCH /* A décommenter si utilisation de PCB doté de micro-switchs */
 
 // ----------------------------------------- OPTIONS
 #ifdef CARTE_SWITCH
@@ -119,7 +120,7 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.4"
+#define VERSION   "v2.0.5"
 
 #define DELAY_PREFIX  50
 #define DELAY_SEND    50
@@ -151,10 +152,6 @@ extern char *__brkval;
 #endif  // __arm__
 */
 
-const unsigned long SEND_FREQUENCY_FULL = 180000; // 3mn, Minimum time between send (in milliseconds). 
-const unsigned long SEND_FREQUENCY_TIC  =  15000; // 15s,  Minimum time between send (in milliseconds). 
-unsigned long lastTime_full = 0;
-unsigned long lastTime_tic = 0;
 unsigned long startTime; // Date démarrage 
 _Mode_e mode_tic;
 boolean flag_first = true;
@@ -428,13 +425,13 @@ void affiche_freeMemory() {
 
 
 // ---------------------------------------------------------------- 
-// change_etat_led_teleinfo
+// clignote_led
 // ---------------------------------------------------------------- 
 void clignote_led(uint8_t led, uint8_t nbr, int16_t delais)
 {
 int led_state;
 
-  for (int i=0; i<nbr*2; i++) {
+  for (uint8_t i=0; i<nbr*2; i++) {
     led_state = !led_state;
     digitalWrite(led, led_state);
     delay(delais);
@@ -587,7 +584,7 @@ _Mode_e init_speed_TIC()
 boolean flag_timeout = false;
 boolean flag_found_speed = false;
 uint32_t currentTime = millis();
-unsigned step = 0;
+uint8_t step = 0;
 _Mode_e mode;
 
   digitalWrite(MY_DEFAULT_ERR_LED_PIN, LOW);
@@ -638,30 +635,6 @@ _Mode_e mode;
   return mode;
 }
 
-
-/* ======================================================================
-Function: NewFrame 
-Purpose : callback when we received a complete teleinfo frame
-Input   : linked list pointer on the concerned data
-Output  : - 
-Comments: it's called only if one data in the frame is different than
-          the previous frame
-====================================================================== */
-/*
-void UpdatedFrame(ValueList *vl_tic)
-{
-
-  //affiche_freeMemory();
-  send_teleinfo(vl_tic, flag_full_tic);
-    
-  if (flag_full_tic) {
-    send(msgTEXT.setSensor(CHILD_ID_START).set(startTime));
-    flag_full_tic = false;
-  }
-
-}
-*/
-
 //-----------------------------------------------------------------------
 // This is called when a new time value was received
 void receiveTime(unsigned long controllerTime) 
@@ -686,10 +659,10 @@ void before()
   pinMode(SWITCH_3, INPUT_PULLUP);
   pinMode(SWITCH_4, INPUT_PULLUP);
 
-  for (int i=0; i<4; i++) {
+  for (uint8_t i=0; i<4; i++) {
     bitWrite(val_switch, i, !digitalRead(i+SWITCH_1));
   }
-  if (val_switch >0) {
+  if (val_switch > 0) {
     Serial.print(F("Force NodeID="));
     Serial.println(val_switch);
     myNodeId=val_switch;

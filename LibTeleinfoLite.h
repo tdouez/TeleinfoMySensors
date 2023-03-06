@@ -23,6 +23,13 @@
 // Edit : Tab size set to 2 but I converted tab to sapces
 //
 // **********************************************************************************
+//--------------------------------------------------------------------
+//   __|              _/           _ )  |
+//   _| |  |   ` \    -_)   -_)    _ \  |   -_)  |  |   -_)
+//  _| \_,_| _|_|_| \___| \___|   ___/ _| \___| \_,_| \___|
+//--------------------------------------------------------------------
+// Version modifiée, sans mémorisation afin d'alléger l'empreinte en mémoire.
+//--------------------------------------------------------------------
 
 #ifndef LibTeleinfo_h
 #define LibTeleinfo_h
@@ -37,7 +44,8 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
-#include <time.h>       /* struct tm */
+// FB 
+//#include <time.h>       /* struct tm */
 #endif
 
 // Define this if you want library to be verbose
@@ -78,7 +86,9 @@ typedef struct _ValueList ValueList;
 struct _ValueList
 {
   ValueList *next; // next element
+  /* FB
   time_t  ts;      // TimeStamp of data if any
+  */
   uint8_t checksum;// checksum
   uint8_t flags;   // specific flags
   char  * name;    // LABEL of value name

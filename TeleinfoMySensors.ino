@@ -70,6 +70,7 @@
 // 2023/02/02 - FB V2.0.3 - Mise à jour librairie LibTeleinfo v1.1.5 avec derniers correctifs https://github.com/hallard/LibTeleinfo/releases
 // 2023/02/27 - FB V2.0.4 - Correction sur l'envoi des préfixes CHILD_ID_CCA*
 // 2023/03/03 = FB V2.0.5 - Optimisation mémoire
+// 2023/04/11 = FB V2.0.6 - Ajout temps maj pour éviter le spam de la gateway et contrôle BASE
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
@@ -120,10 +121,10 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.5"
+#define VERSION   "v2.0.6"
 
 #define DELAY_PREFIX  50
-#define DELAY_SEND    50
+#define DELAY_SEND    1000  // 1 sec
 #define DELAY_PRESENTATION  100
 
 #define MY_BAUD_RATE 9600    // mode standard
@@ -157,6 +158,7 @@ _Mode_e mode_tic;
 boolean flag_first = true;
 boolean flag_full_tic = true;
 boolean flag_tic = true;
+unsigned long memo_BASE = 0;
 
 TInfo tinfo;
 
@@ -449,7 +451,15 @@ void send_teleinfo_historique(char *name, char *value)
   if (strcmp_P(name, char_ADCO) == 0) {send(msgTEXT.setSensor(CHILD_ID_ADCO).set(value));return;}
   if (strcmp_P(name, char_OPTARIF) == 0) {send(msgTEXT.setSensor(CHILD_ID_OPTARIF).set(value));return;}
   if (strcmp_P(name, char_ISOUSC) == 0) {send(msgCURRENT.setSensor(CHILD_ID_ISOUSC).set(atol(value)));return;}
-  if (strcmp_P(name, char_BASE) == 0) {send(msgKWH.setSensor(CHILD_ID_BASE).set(atol(value)));return;}
+  if (strcmp_P(name, char_BASE) == 0) {
+    unsigned long base = atol(value);
+    if (memo_BASE == 0) memo_BASE = base;
+    if (base >= memo_BASE && base < (memo_BASE+10000)) { // évite des incohérences
+      send(msgKWH.setSensor(CHILD_ID_BASE).set(base));
+      memo_BASE = base;
+    }
+    return;
+  }
   if (strcmp_P(name, char_HCHC) == 0) {send(msgKWH.setSensor(CHILD_ID_HCHC).set(atol(value)));return;}
   if (strcmp_P(name, char_HCHP) == 0) {send(msgKWH.setSensor(CHILD_ID_HCHP).set(atol(value)));return;}
   if (strcmp_P(name, char_EJPHN) == 0) {send(msgKWH.setSensor(CHILD_ID_EJPHN).set(atol(value)));return;}
@@ -574,6 +584,7 @@ void send_teleinfo(char *etiq, char *val)
    else {
       send_teleinfo_standard(etiq, val);
    }
+   wait(DELAY_SEND);
 }
 
 // ---------------------------------------------------------------- 
@@ -703,17 +714,19 @@ void presentation()
     present (CHILD_ID_ADCO, S_INFO, F("ADCO"));
     present (CHILD_ID_OPTARIF, S_INFO, F("OPTARIF"));
     present (CHILD_ID_ISOUSC, S_MULTIMETER, F("ISOUSC"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_BASE, S_POWER, F("BASE"));
     present (CHILD_ID_HCHC, S_POWER, F("HCHC"));
-    wait(DELAY_PRESENTATION);
     present (CHILD_ID_HCHP, S_POWER, F("HCHP"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_EJPHN, S_POWER, F("EJPHN"));
     present (CHILD_ID_EJPHPM, S_POWER, F("EJPHPM"));
     present (CHILD_ID_BBRHCJB, S_POWER, F("BBRHCJB"));
-    present (CHILD_ID_BBRHPJB, S_POWER, F("BBRHPJB"));
     wait(DELAY_PRESENTATION);
+    present (CHILD_ID_BBRHPJB, S_POWER, F("BBRHPJB"));
     present (CHILD_ID_BBRHCJW, S_POWER, F("BBRHCJW"));
     present (CHILD_ID_BBRHPJW, S_POWER, F("BBRHPJW"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_BBRHCJR, S_POWER, F("BBRHCJR"));
     present (CHILD_ID_BBRHPJR, S_POWER, F("BBRHPJR"));
     present (CHILD_ID_PEJP, S_INFO, F("PEJP"));
@@ -721,17 +734,19 @@ void presentation()
     present (CHILD_ID_PTEC, S_INFO, F("PTEC"));
     present (CHILD_ID_DEMAIN, S_INFO, F("DEMAIN"));
     present (CHILD_ID_IINST, S_MULTIMETER, F("IINST"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_ADPS, S_MULTIMETER, F("ADPS"));
     present (CHILD_ID_IMAX, S_MULTIMETER, F("IMAX"));
-    wait(DELAY_PRESENTATION);
     present (CHILD_ID_PAPP, S_POWER, F("PAPP"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_HHPHC, S_INFO, F("HHPHC"));
     present (CHILD_ID_MOTDETAT, S_INFO, F("MOTDETAT"));
     present (CHILD_ID_IINST1, S_MULTIMETER, F("IINST1"));
-    present (CHILD_ID_IINST2, S_MULTIMETER, F("IINST2"));
     wait(DELAY_PRESENTATION);
+    present (CHILD_ID_IINST2, S_MULTIMETER, F("IINST2"));
     present (CHILD_ID_IINST3, S_MULTIMETER, F("IINST3"));
     present (CHILD_ID_IMAX1, S_MULTIMETER, F("IMAX1"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_IMAX2, S_MULTIMETER, F("IMAX2"));
     present (CHILD_ID_IMAX3, S_MULTIMETER, F("IMAX3"));
     present (CHILD_ID_PMAX, S_POWER, F("PMAX"));
@@ -746,17 +761,19 @@ void presentation()
     present (CHILD_ID_ADSC, S_INFO, F("ADSC"));
     present (CHILD_ID_VTIC, S_INFO, F("VTIC"));
     present (CHILD_ID_DATE, S_INFO, F("DATE"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_NGTF, S_INFO, F("NGTF"));
     present (CHILD_ID_LTARF, S_INFO, F("LTARF"));
-    wait(DELAY_PRESENTATION);
     present (CHILD_ID_EAST, S_POWER, F("EAST"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_EASF01, S_POWER, F("EASF01"));
     present (CHILD_ID_EASF02, S_POWER, F("EASF02"));
     present (CHILD_ID_EASF03, S_POWER, F("EASF03"));
-    present (CHILD_ID_EASF04, S_POWER, F("EASF04"));
     wait(DELAY_PRESENTATION);
+    present (CHILD_ID_EASF04, S_POWER, F("EASF04"));
     present (CHILD_ID_EASF05, S_POWER, F("EASF05"));
     present (CHILD_ID_EASF06, S_POWER, F("EASF06"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_EASF07, S_POWER, F("EASF07"));
     present (CHILD_ID_EASF08, S_POWER, F("EASF08"));
     present (CHILD_ID_EASF09, S_POWER, F("EASF09"));
@@ -764,17 +781,19 @@ void presentation()
     present (CHILD_ID_EASF10, S_POWER, F("EASF10"));
     present (CHILD_ID_EASD01, S_POWER, F("EASD01"));
     present (CHILD_ID_EASD02, S_POWER, F("EASD02"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_EASD03, S_POWER, F("EASD03"));
     present (CHILD_ID_EASD04, S_POWER, F("EASD04"));
-    wait(DELAY_PRESENTATION);
     present (CHILD_ID_EAIT, S_POWER, F("EAIT"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_ERQ1, S_POWER, F("ERQ1"));
     present (CHILD_ID_ERQ2, S_POWER, F("ERQ2"));
     present (CHILD_ID_ERQ3, S_POWER, F("ERQ3"));
-    present (CHILD_ID_ERQ4, S_POWER, F("ERQ4"));
     wait(DELAY_PRESENTATION);
+    present (CHILD_ID_ERQ4, S_POWER, F("ERQ4"));
     present (CHILD_ID_IRMS1, S_MULTIMETER, F("IRMS1"));
     present (CHILD_ID_IRMS2, S_MULTIMETER, F("IRMS2"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_IRMS3, S_MULTIMETER, F("IRMS3"));
     present (CHILD_ID_URMS1, S_MULTIMETER, F("URMS1"));
     present (CHILD_ID_URMS2, S_MULTIMETER, F("URMS2"));
@@ -782,17 +801,19 @@ void presentation()
     present (CHILD_ID_URMS3, S_MULTIMETER, F("URMS3"));
     present (CHILD_ID_PREF, S_POWER, F("PREF"));
     present (CHILD_ID_PCOUP, S_POWER, F("PCOUP"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_SINSTS, S_POWER, F("SINSTS"));
     present (CHILD_ID_SINSTS1, S_POWER, F("SINSTS1"));
-    wait(DELAY_PRESENTATION);
     present (CHILD_ID_SINSTS2, S_POWER, F("SINSTS2"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_SINSTS3, S_POWER, F("SINSTS3"));
     present (CHILD_ID_SMAXSN, S_POWER, F("SMAXSN"));
     present (CHILD_ID_SMAXSN1, S_POWER, F("SMAXSN1"));
-    present (CHILD_ID_SMAXSN2, S_POWER, F("SMAXSN2"));
     wait(DELAY_PRESENTATION);
+    present (CHILD_ID_SMAXSN2, S_POWER, F("SMAXSN2"));
     present (CHILD_ID_SMAXSN3, S_POWER, F("SMAXSN3"));
     present (CHILD_ID_SMAXSN_1, S_POWER, F("SMAXSN-1"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_SMAXSN1_1, S_POWER, F("SMAXSN1-1"));
     present (CHILD_ID_SMAXSN2_1, S_POWER, F("SMAXSN2-1"));
     present (CHILD_ID_SMAXSN3_1, S_POWER, F("SMAXSN3-1"));
@@ -800,17 +821,19 @@ void presentation()
     present (CHILD_ID_SINSTI, S_POWER, F("SINSTI"));
     present (CHILD_ID_SMAXIN, S_POWER, F("SMAXIN"));
     present (CHILD_ID_SMAXIN_1, S_POWER, F("SMAXIN-1"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_CCASN, S_POWER, F("CCASN"));
     present (CHILD_ID_CCASN_1, S_POWER, F("CCASN-1"));
-    wait(DELAY_PRESENTATION);
     present (CHILD_ID_CCAIN, S_POWER, F("CCAIN"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_CCAIN_1, S_POWER, F("CCAIN-1"));
     present (CHILD_ID_UMOY1, S_MULTIMETER, F("UMOY1"));
     present (CHILD_ID_UMOY2, S_MULTIMETER, F("UMOY2"));
-    present (CHILD_ID_UMOY3, S_MULTIMETER, F("UMOY3"));
     wait(DELAY_PRESENTATION);
+    present (CHILD_ID_UMOY3, S_MULTIMETER, F("UMOY3"));
     present (CHILD_ID_STGE, S_INFO, F("STGE"));
     present (CHILD_ID_DPM1, S_INFO, F("DPM1"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_DPM2, S_INFO, F("DPM2"));
     present (CHILD_ID_DPM3, S_INFO, F("DPM3"));
     present (CHILD_ID_FPM1, S_INFO, F("FPM1"));
@@ -818,15 +841,16 @@ void presentation()
     present (CHILD_ID_FPM2, S_INFO, F("FPM2"));
     present (CHILD_ID_FPM3, S_INFO, F("FPM3"));
     present (CHILD_ID_MSG1, S_INFO, F("MSG1"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_MSG2, S_INFO, F("MSG2"));
     present (CHILD_ID_PRM, S_INFO, F("PRM"));
-    wait(DELAY_PRESENTATION);
     present (CHILD_ID_RELAIS, S_INFO, F("RELAIS"));
+    wait(DELAY_PRESENTATION);
     present (CHILD_ID_NTARF, S_INFO, F("NTARF"));
     present (CHILD_ID_NJOURF, S_INFO, F("NJOURF"));
     present (CHILD_ID_NJOURF_1, S_INFO, F("NJOURF+1"));
-    present (CHILD_ID_PJOURF_1, S_INFO, F("PJOURF+1"));
     wait(DELAY_PRESENTATION);
+    present (CHILD_ID_PJOURF_1, S_INFO, F("PJOURF+1"));
     present (CHILD_ID_PPOINTE, S_INFO, F("PPOINTE"));
   }
   present( CHILD_ID_START, S_INFO, F("START"));

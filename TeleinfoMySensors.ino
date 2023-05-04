@@ -69,12 +69,15 @@
 // 2023/01/23 - FB V2.0.2 - Correction sur l'envoi des prefixes des chil_id_smax. Merci à Laurent B.
 // 2023/02/02 - FB V2.0.3 - Mise à jour librairie LibTeleinfo v1.1.5 avec derniers correctifs https://github.com/hallard/LibTeleinfo/releases
 // 2023/02/27 - FB V2.0.4 - Correction sur l'envoi des préfixes CHILD_ID_CCA*
-// 2023/03/03 = FB V2.0.5 - Optimisation mémoire
-// 2023/04/11 = FB V2.0.6 - Ajout temps maj pour éviter le spam de la gateway et contrôle BASE
+// 2023/03/03 - FB V2.0.5 - Optimisation mémoire
+// 2023/04/11 - FB V2.0.6 - Ajout temps maj pour éviter le spam de la gateway et contrôle BASE
+// 2023/05/04 - FB V2.0.7 - Amélioration détection mode TIC historique/standard
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
-#define MY_DEBUG
+//#define MY_DEBUG
+
+//#define DEBUG_TIC
 
 #define CARTE_SWITCH /* A décommenter si utilisation de PCB doté de micro-switchs */
 
@@ -121,7 +124,7 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.6"
+#define VERSION   "v2.0.7"
 
 #define DELAY_PREFIX  50
 #define DELAY_SEND    1000  // 1 sec
@@ -431,7 +434,7 @@ void affiche_freeMemory() {
 // ---------------------------------------------------------------- 
 void clignote_led(uint8_t led, uint8_t nbr, int16_t delais)
 {
-int led_state;
+int led_state=0;
 
   for (uint8_t i=0; i<nbr*2; i++) {
     led_state = !led_state;
@@ -596,6 +599,8 @@ boolean flag_timeout = false;
 boolean flag_found_speed = false;
 uint32_t currentTime = millis();
 uint8_t step = 0;
+int nbc_etiq=0;
+int nbc_val=0;
 _Mode_e mode;
 
   digitalWrite(MY_DEFAULT_ERR_LED_PIN, LOW);
@@ -608,19 +613,37 @@ _Mode_e mode;
     if (Serial.available()>0) {
       char in = (char)Serial.read() & 127;  // seulement sur 7 bits
       // début trame
-        if (in == 0x0A) {
-        step = 1;
+      if (step == 1) {
+        if (in == 0x20) {
+          #ifdef DEBUG_TIC
+            Serial.print(F("Etq 0x20:"));
+            Serial.println(nbc_etiq);
+          #endif
+          if (nbc_etiq > 3 && nbc_etiq < 10) step = 2;
+            else step = 0;
+        }
+        else nbc_etiq++; // recupère nombre caractères de l'étiquette
       }
-      // premier milieu de trame
-        if (step == 1 && in == 0x20) {
-        step = 2;
+      else {
+        // deuxième milieu de trame, valeur
+        if (step == 2) {
+          if (in == 0x20) {
+            #ifdef DEBUG_TIC
+              Serial.print(F("Val 0x20:"));
+              Serial.println(nbc_val);
+            #endif
+            if (nbc_val > 0 && nbc_val < 13) step = 3;
+              else step = 0;
+          }
+          else nbc_val++; // recupère nombre caractères de la valeur
+        }
       }
-      // deuxième milieu de trame
-        if (step == 2 && in == 0x20) {
-        step = 3;
-      }
+
       // fin trame
-        if (step == 3 && in == 0x0D) {
+      if (step == 3 && in == 0x0D) {
+        #ifdef DEBUG_TIC
+          Serial.println(F("Fin 0x0D"));
+        #endif
         flag_found_speed = true;
         step = 0;
       }

@@ -72,6 +72,7 @@
 // 2023/03/03 - FB V2.0.5 - Optimisation mémoire
 // 2023/04/11 - FB V2.0.6 - Ajout temps maj pour éviter le spam de la gateway et contrôle BASE
 // 2023/05/04 - FB V2.0.7 - Amélioration détection mode TIC historique/standard
+// 2023/06/03 - FB V2.0.8 - Correction detection TIC historique
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
@@ -124,7 +125,7 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.7"
+#define VERSION   "v2.0.8"
 
 #define DELAY_PREFIX  50
 #define DELAY_SEND    1000  // 1 sec
@@ -609,9 +610,26 @@ _Mode_e mode;
   // Test en mode historique
   // Recherche des éléments de début, milieu et fin de trame (0x0A, 0x20, 0x20, 0x0D)
   Serial.begin(1200); // mode historique
+  Serial.println(F("Recherche mod TIC"));
+
   while (!flag_timeout && !flag_found_speed) {
     if (Serial.available()>0) {
       char in = (char)Serial.read() & 127;  // seulement sur 7 bits
+
+      #ifdef DEBUG_TIC
+      Serial.print(in, HEX);
+      Serial.println(".");
+      #endif
+      // début trame
+      if (in == 0x0A) {
+        step = 1;
+        nbc_etiq = -1;
+        nbc_val = 0;
+        #ifdef DEBUG_TIC
+          Serial.println(F("Deb 0x0A"));
+        #endif
+      }
+
       // début trame
       if (step == 1) {
         if (in == 0x20) {
@@ -655,13 +673,13 @@ _Mode_e mode;
      mode = TINFO_MODE_STANDARD;
      Serial.end();
      Serial.begin(9600); // mode standard
-     Serial.println(F("TIC mode standard"));
+     Serial.println(F(">> TIC mode standard <<"));
      clignote_led(MY_DEFAULT_RX_LED_PIN, 3, 500);
   }
   else {
     mode = TINFO_MODE_HISTORIQUE;
-    Serial.println(F("TIC mode historique"));
-    clignote_led(MY_DEFAULT_RX_LED_PIN, 5, 500);
+    Serial.println(F(">> TIC mode historique <<"));
+    clignote_led(MY_DEFAULT_RX_LED_PIN, 5, 200);
   }
   
   digitalWrite(MY_DEFAULT_ERR_LED_PIN, HIGH);

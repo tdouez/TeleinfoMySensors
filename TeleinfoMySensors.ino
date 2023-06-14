@@ -73,6 +73,7 @@
 // 2023/04/11 - FB V2.0.6 - Ajout temps maj pour éviter le spam de la gateway et contrôle BASE
 // 2023/05/04 - FB V2.0.7 - Amélioration détection mode TIC historique/standard
 // 2023/06/03 - FB V2.0.8 - Correction detection TIC historique
+// 2023/06/12 - FB V2.0.9 - Ajout compatibilité Arduino pro micro et correction detection TIC historique
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
@@ -125,7 +126,7 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.8"
+#define VERSION   "v2.0.9"
 
 #define DELAY_PREFIX  50
 #define DELAY_SEND    1000  // 1 sec
@@ -144,6 +145,10 @@ int8_t myNodeId;
 #define SWITCH_2  6
 #define SWITCH_3  7
 #define SWITCH_4  8
+
+#if defined(__AVR_ATmega32U4__)
+#define MY_RF24_CS_PIN 10
+#endif
 
 #include <MySensors.h>
 #include "LibTeleinfoLite.h"
@@ -609,12 +614,22 @@ _Mode_e mode;
   
   // Test en mode historique
   // Recherche des éléments de début, milieu et fin de trame (0x0A, 0x20, 0x20, 0x0D)
+  #if defined(__AVR_ATmega32U4__)
+  Serial.begin(9600);
+  Serial1.begin(1200); // mode historique
+  #else
   Serial.begin(1200); // mode historique
-  Serial.println(F("Recherche mod TIC"));
-
+  #endif
+  Serial.println(F("Recherche mode TIC"));
+  
   while (!flag_timeout && !flag_found_speed) {
+    #if defined(__AVR_ATmega32U4__)
+    if (Serial1.available()>0) {
+      char in = (char)Serial1.read() & 127;  // seulement sur 7 bits
+    #else
     if (Serial.available()>0) {
       char in = (char)Serial.read() & 127;  // seulement sur 7 bits
+    #endif
 
       #ifdef DEBUG_TIC
       Serial.print(in, HEX);
@@ -666,13 +681,20 @@ _Mode_e mode;
         step = 0;
       }
     }
-    if (currentTime + 10000 <  millis()) flag_timeout = true; // 10s de timeout
+    if (currentTime + 10000 <  millis()) {
+      flag_timeout = true; // 10s de timeout
+    }
   }
 
-  if (flag_timeout) { // trame avec vistesse histo non trouvée donc passage en mode standard
+  if (flag_timeout == true && flag_found_speed == false) { // trame avec vistesse histo non trouvée donc passage en mode standard
      mode = TINFO_MODE_STANDARD;
+     #if defined(__AVR_ATmega32U4__)
+     Serial1.end();
+     Serial1.begin(9600); // mode standard
+     #else
      Serial.end();
      Serial.begin(9600); // mode standard
+     #endif
      Serial.println(F(">> TIC mode standard <<"));
      clignote_led(MY_DEFAULT_RX_LED_PIN, 3, 500);
   }
@@ -710,6 +732,8 @@ void before()
   pinMode(SWITCH_2, INPUT_PULLUP);
   pinMode(SWITCH_3, INPUT_PULLUP);
   pinMode(SWITCH_4, INPUT_PULLUP);
+    
+  mode_tic = init_speed_TIC();
 
   for (uint8_t i=0; i<4; i++) {
     bitWrite(val_switch, i, !digitalRead(i+SWITCH_1));
@@ -724,9 +748,7 @@ void before()
     myNodeId = AUTO;
   }
   #endif
-    
-  mode_tic = init_speed_TIC();
-    
+  
   Serial.println(F("   __|              _/           _ )  |"));
   Serial.println(F("   _| |  |   ` \\    -_)   -_)    _ \\  |   -_)  |  |   -_)"));
   Serial.println(F("  _| \\_,_| _|_|_| \\___| \\___|   ___/ _| \\___| \\_,_| \\___|"));
@@ -1010,8 +1032,12 @@ void loop()
     send(msgTEXT.setSensor(CHILD_ID_START).set(startTime));
       
     flag_first= false;
-  }
-
+  } 
+  
+  #if defined(__AVR_ATmega32U4__)
+  if (Serial1.available()) tinfo.process(Serial1.read());
+  #else
   if (Serial.available()) tinfo.process(Serial.read());
+  #endif
 
 }

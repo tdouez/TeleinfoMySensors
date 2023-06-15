@@ -74,6 +74,7 @@
 // 2023/05/04 - FB V2.0.7 - Amélioration détection mode TIC historique/standard
 // 2023/06/03 - FB V2.0.8 - Correction detection TIC historique
 // 2023/06/12 - FB V2.0.9 - Ajout compatibilité Arduino pro micro et correction detection TIC historique
+// 2023/06/14 - FB V2.1.0 - Modification mise à jour gateway, plus de spam ni de perte d'étiquette. 
 //--------------------------------------------------------------------
 
 // Enable debug prints MySensors
@@ -126,11 +127,12 @@ int8_t myNodeId;
 
 // ----------------------------------------- FIN OPTIONS
 
-#define VERSION   "v2.0.9"
+#define VERSION   "v2.1.0"
 
 #define DELAY_PREFIX  50
-#define DELAY_SEND    1000  // 1 sec
 #define DELAY_PRESENTATION  100
+
+#define MY_SPLASH_SCREEN_DISABLED
 
 #define MY_BAUD_RATE 9600    // mode standard
 
@@ -148,10 +150,16 @@ int8_t myNodeId;
 
 #if defined(__AVR_ATmega32U4__)
 #define MY_RF24_CS_PIN 10
+#include <avr/wdt.h> 
+#else
+#warning ---------------------------------------------------------------------------------------------------------------
+#warning !! Ce code n'est pas optimisé pour les ATMEGA328p, risque d'instabilité mar manque de mémoire RAM !!
+#warning ---------------------------------------------------------------------------------------------------------------
 #endif
 
+
 #include <MySensors.h>
-#include "LibTeleinfoLite.h"
+#include "LibTeleinfo.h"
 
 /*
 #ifdef __arm__
@@ -168,6 +176,8 @@ boolean flag_first = true;
 boolean flag_full_tic = true;
 boolean flag_tic = true;
 unsigned long memo_BASE = 0;
+const unsigned long SEND_FREQUENCY_FULL = 300000; // 5mn, Minimum time between send (in milliseconds). 
+unsigned long lastTime_full = 0;
 
 TInfo tinfo;
 
@@ -263,12 +273,12 @@ const char char_EASF01[] PROGMEM = "EASF01";
 const char char_EASF02[] PROGMEM = "EASF02";
 const char char_EASF03[] PROGMEM = "EASF03";
 const char char_EASF04[] PROGMEM = "EASF04";
-const char char_EASF05[] PROGMEM = "EASF05";
-const char char_EASF06[] PROGMEM = "EASF06";
-const char char_EASF07[] PROGMEM = "EASF07";
-const char char_EASF08[] PROGMEM = "EASF08";
-const char char_EASF09[] PROGMEM = "EASF09";
-const char char_EASF10[] PROGMEM = "EASF10";
+//const char char_EASF05[] PROGMEM = "EASF05";
+//const char char_EASF06[] PROGMEM = "EASF06";
+//const char char_EASF07[] PROGMEM = "EASF07";
+//const char char_EASF08[] PROGMEM = "EASF08";
+//const char char_EASF09[] PROGMEM = "EASF09";
+//const char char_EASF10[] PROGMEM = "EASF10";
 const char char_EASD01[] PROGMEM = "EASD01";
 const char char_EASD02[] PROGMEM = "EASD02";
 const char char_EASD03[] PROGMEM = "EASD03";
@@ -335,12 +345,12 @@ const char char_PPOINTE[] PROGMEM = "PPOINTE";
 #define CHILD_ID_EASF02     8
 #define CHILD_ID_EASF03     9
 #define CHILD_ID_EASF04     10
-#define CHILD_ID_EASF05     11
-#define CHILD_ID_EASF06     12
-#define CHILD_ID_EASF07     13
-#define CHILD_ID_EASF08     14
-#define CHILD_ID_EASF09     15
-#define CHILD_ID_EASF10     16
+//#define CHILD_ID_EASF05     11
+//#define CHILD_ID_EASF06     12
+//#define CHILD_ID_EASF07     13
+//#define CHILD_ID_EASF08     14
+//#define CHILD_ID_EASF09     15
+//#define CHILD_ID_EASF10     16
 #define CHILD_ID_EASD01     17
 #define CHILD_ID_EASD02     18
 #define CHILD_ID_EASD03     19
@@ -399,6 +409,7 @@ const char char_PPOINTE[] PROGMEM = "PPOINTE";
 
 
 const char char_START[] PROGMEM = "START";
+#define CHILD_ID_WD       98
 #define CHILD_ID_START    99
 
 MyMessage msgTEXT( 0, V_TEXT);        // S_INFO
@@ -457,6 +468,10 @@ int led_state=0;
 // ---------------------------------------------------------------- 
 void send_teleinfo_historique(char *name, char *value)
 {
+  Serial.print("SendH:");
+  Serial.print(name);
+  Serial.print(":");
+  Serial.println(value);
   if (strcmp_P(name, char_ADCO) == 0) {send(msgTEXT.setSensor(CHILD_ID_ADCO).set(value));return;}
   if (strcmp_P(name, char_OPTARIF) == 0) {send(msgTEXT.setSensor(CHILD_ID_OPTARIF).set(value));return;}
   if (strcmp_P(name, char_ISOUSC) == 0) {send(msgCURRENT.setSensor(CHILD_ID_ISOUSC).set(atol(value)));return;}
@@ -507,6 +522,10 @@ void send_teleinfo_historique(char *name, char *value)
 // ---------------------------------------------------------------- 
 void send_teleinfo_standard(char *name, char *value)
 {
+  Serial.print("SendS:");
+  Serial.print(name);
+  Serial.print(":");
+  Serial.println(value);
   if (strcmp_P(name, char_ADSC) == 0) {send(msgTEXT.setSensor(CHILD_ID_ADSC).set(value));return;}
   if (strcmp_P(name, char_VTIC) == 0) {send(msgTEXT.setSensor(CHILD_ID_VTIC).set(value));return;}
   if (strcmp_P(name, char_DATE) == 0) {send(msgTEXT.setSensor(CHILD_ID_DATE).set(value));return;}
@@ -517,12 +536,12 @@ void send_teleinfo_standard(char *name, char *value)
   if (strcmp_P(name, char_EASF02) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF02).set(atol(value)));return;}
   if (strcmp_P(name, char_EASF03) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF03).set(atol(value)));return;}
   if (strcmp_P(name, char_EASF04) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF04).set(atol(value)));return;}
-  if (strcmp_P(name, char_EASF05) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF05).set(atol(value)));return;}
-  if (strcmp_P(name, char_EASF06) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF06).set(atol(value)));return;}
-  if (strcmp_P(name, char_EASF07) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF07).set(atol(value)));return;}
-  if (strcmp_P(name, char_EASF08) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF08).set(atol(value)));return;}
-  if (strcmp_P(name, char_EASF09) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF09).set(atol(value)));return;}
-  if (strcmp_P(name, char_EASF10) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF10).set(atol(value)));return;}
+  //if (strcmp_P(name, char_EASF05) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF05).set(atol(value)));return;}
+  //if (strcmp_P(name, char_EASF06) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF06).set(atol(value)));return;}
+  //if (strcmp_P(name, char_EASF07) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF07).set(atol(value)));return;}
+  //if (strcmp_P(name, char_EASF08) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF08).set(atol(value)));return;}
+  //if (strcmp_P(name, char_EASF09) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF09).set(atol(value)));return;}
+  //if (strcmp_P(name, char_EASF10) == 0) {send(msgKWH.setSensor(CHILD_ID_EASF10).set(atol(value)));return;}
   if (strcmp_P(name, char_EASD01) == 0) {send(msgKWH.setSensor(CHILD_ID_EASD01).set(atol(value)));return;}
   if (strcmp_P(name, char_EASD02) == 0) {send(msgKWH.setSensor(CHILD_ID_EASD02).set(atol(value)));return;}
   if (strcmp_P(name, char_EASD03) == 0) {send(msgKWH.setSensor(CHILD_ID_EASD03).set(atol(value)));return;}
@@ -584,16 +603,24 @@ void send_teleinfo_standard(char *name, char *value)
 // send_teleinfo
 //    Envoi trame de teleinfo
 // ---------------------------------------------------------------- 
-void send_teleinfo(char *etiq, char *val)
+void send_teleinfo(ValueList *vl_tic)
 {
   
-   if (mode_tic == TINFO_MODE_HISTORIQUE) {
-      send_teleinfo_historique(etiq, val);
-   }
-   else {
-      send_teleinfo_standard(etiq, val);
-   }
-   wait(DELAY_SEND);
+  if (vl_tic && flag_tic) {
+    // parcours liste chainée vl_tic
+    while (vl_tic->next) {
+      vl_tic = vl_tic->next;
+      if (vl_tic->name && strlen(vl_tic->name) > 2 && vl_tic->value && strlen(vl_tic->value) > 1) {
+        if (mode_tic == TINFO_MODE_HISTORIQUE) {
+          send_teleinfo_historique(vl_tic->name, vl_tic->value);
+        }
+        else {
+          send_teleinfo_standard(vl_tic->name, vl_tic->value);
+        }
+      }
+    }
+    flag_tic = false;
+  }
 }
 
 // ---------------------------------------------------------------- 
@@ -719,6 +746,43 @@ void receiveTime(unsigned long controllerTime)
   startTime = controllerTime;
 }
 
+/* ======================================================================
+Function: DataCallback 
+Purpose : callback when we detected new or modified data received
+Input   : linked list pointer on the concerned data
+          current flags value
+Output  : - 
+Comments: -
+====================================================================== */
+void DataCallback(ValueList * me, uint8_t  flags)
+{
+
+  if ((flags & TINFO_FLAGS_UPDATED) || flags & TINFO_FLAGS_ADDED) {
+    if (flag_full_tic) {
+      send_teleinfo(me); 
+    }
+    else {
+      if (mode_tic == TINFO_MODE_HISTORIQUE) {
+        send_teleinfo_historique(me->name, me->value);
+      }
+      else {
+        send_teleinfo_standard(me->name, me->value);
+      }
+    }
+
+    flag_full_tic = false;
+  }
+ 
+  #ifdef DEBUG_TIC
+  // Display values
+  if (flags & TINFO_FLAGS_ADDED) Serial.print(F("NEW -> "));
+  if (flags & TINFO_FLAGS_UPDATED) Serial.print(F("MAJ -> "));
+  Serial.print(me->name);
+  Serial.print("=");
+  Serial.println(me->value);
+  #endif
+
+}
 
 //--------------------------------------------------------------------
 void before()
@@ -739,22 +803,26 @@ void before()
     bitWrite(val_switch, i, !digitalRead(i+SWITCH_1));
   }
   if (val_switch > 0) {
-    Serial.print(F("Force NodeID="));
+    Serial.print("Force NodeID=");
     Serial.println(val_switch);
     myNodeId=val_switch;
   }
   else {
-    Serial.println(F("NodeID=AUTO"));
+    Serial.println("NodeID=AUTO");
     myNodeId = AUTO;
   }
   #endif
   
-  Serial.println(F("   __|              _/           _ )  |"));
-  Serial.println(F("   _| |  |   ` \\    -_)   -_)    _ \\  |   -_)  |  |   -_)"));
-  Serial.println(F("  _| \\_,_| _|_|_| \\___| \\___|   ___/ _| \\___| \\_,_| \\___|"));
+  Serial.println("   __|              _/           _ )  |");
+  Serial.println("   _| |  |   ` \\    -_)   -_)    _ \\  |   -_)  |  |   -_)");
+  Serial.println("  _| \\_,_| _|_|_| \\___| \\___|   ___/ _| \\___| \\_,_| \\___|");
   Serial.println(VERSION);
 
   tinfo.init(mode_tic);
+  #if defined(__AVR_ATmega32U4__)
+  wdt_enable(WDTO_8S);
+  wdt_reset();
+  #endif
 }
 
 //--------------------------------------------------------------------
@@ -834,14 +902,14 @@ void presentation()
     present (CHILD_ID_EASF03, S_POWER, F("EASF03"));
     wait(DELAY_PRESENTATION);
     present (CHILD_ID_EASF04, S_POWER, F("EASF04"));
-    present (CHILD_ID_EASF05, S_POWER, F("EASF05"));
-    present (CHILD_ID_EASF06, S_POWER, F("EASF06"));
-    wait(DELAY_PRESENTATION);
-    present (CHILD_ID_EASF07, S_POWER, F("EASF07"));
-    present (CHILD_ID_EASF08, S_POWER, F("EASF08"));
-    present (CHILD_ID_EASF09, S_POWER, F("EASF09"));
-    wait(DELAY_PRESENTATION);
-    present (CHILD_ID_EASF10, S_POWER, F("EASF10"));
+    //present (CHILD_ID_EASF05, S_POWER, F("EASF05"));
+    //present (CHILD_ID_EASF06, S_POWER, F("EASF06"));
+    //wait(DELAY_PRESENTATION);
+    //present (CHILD_ID_EASF07, S_POWER, F("EASF07"));
+    //present (CHILD_ID_EASF08, S_POWER, F("EASF08"));
+    //present (CHILD_ID_EASF09, S_POWER, F("EASF09"));
+    //wait(DELAY_PRESENTATION);
+    //present (CHILD_ID_EASF10, S_POWER, F("EASF10"));
     present (CHILD_ID_EASD01, S_POWER, F("EASD01"));
     present (CHILD_ID_EASD02, S_POWER, F("EASD02"));
     wait(DELAY_PRESENTATION);
@@ -917,6 +985,9 @@ void presentation()
     present (CHILD_ID_PPOINTE, S_INFO, F("PPOINTE"));
   }
   present( CHILD_ID_START, S_INFO, F("START"));
+  #if defined(__AVR_ATmega32U4__)
+  present( CHILD_ID_WD, S_INFO, F("WD"));
+  #endif
 
   //affiche_freeMemory();
 
@@ -928,7 +999,7 @@ void presentation()
 //--------------------------------------------------------------------
 void loop()
 {
-  //uint32_t currentTime = millis();
+  uint32_t currentTime = millis();
   
   if (flag_first) {
 	// Send prefix au démarrage
@@ -973,13 +1044,13 @@ void loop()
       send(msgPrefix.setSensor(CHILD_ID_EASF03).set(char_WATT_HEURE));
       send(msgPrefix.setSensor(CHILD_ID_EASF04).set(char_WATT_HEURE));
       wait(DELAY_PREFIX);
-      send(msgPrefix.setSensor(CHILD_ID_EASF05).set(char_WATT_HEURE));
-      send(msgPrefix.setSensor(CHILD_ID_EASF06).set(char_WATT_HEURE));
-      send(msgPrefix.setSensor(CHILD_ID_EASF07).set(char_WATT_HEURE));
-      send(msgPrefix.setSensor(CHILD_ID_EASF08).set(char_WATT_HEURE));
-      send(msgPrefix.setSensor(CHILD_ID_EASF09).set(char_WATT_HEURE));
-      wait(DELAY_PREFIX);
-      send(msgPrefix.setSensor(CHILD_ID_EASF10).set(char_WATT_HEURE));
+ //     send(msgPrefix.setSensor(CHILD_ID_EASF05).set(char_WATT_HEURE));
+ //     send(msgPrefix.setSensor(CHILD_ID_EASF06).set(char_WATT_HEURE));
+ //     send(msgPrefix.setSensor(CHILD_ID_EASF07).set(char_WATT_HEURE));
+ //     send(msgPrefix.setSensor(CHILD_ID_EASF08).set(char_WATT_HEURE));
+ //     send(msgPrefix.setSensor(CHILD_ID_EASF09).set(char_WATT_HEURE));
+ //     wait(DELAY_PREFIX);
+ //     send(msgPrefix.setSensor(CHILD_ID_EASF10).set(char_WATT_HEURE));
       send(msgPrefix.setSensor(CHILD_ID_EASD01).set(char_WATT_HEURE));
       send(msgPrefix.setSensor(CHILD_ID_EASD02).set(char_WATT_HEURE));
       send(msgPrefix.setSensor(CHILD_ID_EASD03).set(char_WATT_HEURE));
@@ -1030,14 +1101,29 @@ void loop()
     }
 
     send(msgTEXT.setSensor(CHILD_ID_START).set(startTime));
+    #if defined(__AVR_ATmega32U4__)
+    char val_mcusr[10];
+    sprintf(val_mcusr, "%02X", MCUSR);
+    send(msgTEXT.setSensor(CHILD_ID_WD).set(val_mcusr));
+    #endif
+	
+    tinfo.attachData(DataCallback);
       
     flag_first= false;
   } 
   
   #if defined(__AVR_ATmega32U4__)
   if (Serial1.available()) tinfo.process(Serial1.read());
+  wdt_reset();
   #else
   if (Serial.available()) tinfo.process(Serial.read());
   #endif
+
+  // envoyer l'ensemble des données tous les SEND_FREQUENCY_FULL ms
+  if (currentTime - lastTime_full > SEND_FREQUENCY_FULL) {
+    Serial.println(F("SEND_FULL"));
+    flag_full_tic = true;
+    lastTime_full = currentTime;
+  }
 
 }
